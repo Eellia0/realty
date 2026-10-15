@@ -24,6 +24,7 @@ export type CatalogFilters = {
   areaMax?: number;
   sea?: string; // максимальное расстояние до моря, м
   seaView?: boolean;
+  inst?: boolean;
   region?: string;
   completion?: string;
   finishing?: string;
@@ -73,6 +74,7 @@ export function parseFilters(sp: SearchParams): CatalogFilters {
     areaMax: num(sp.areaMax),
     sea: SEA_DISTANCE_OPTIONS.some((o) => o.value === sea) ? sea : undefined,
     seaView: first(sp.seaView) === "1" || undefined,
+    inst: first(sp.inst) === "1" || undefined,
     region: pick(REGIONS, sp.region),
     completion: pick(COMPLETION, sp.completion),
     finishing: pick(FINISHING, sp.finishing),
@@ -86,7 +88,7 @@ export function parseFilters(sp: SearchParams): CatalogFilters {
 
 /** Сколько дополнительных фильтров включено: для бейджа на кнопке «Ещё фильтры». */
 export function extraFilterCount(f: CatalogFilters) {
-  return [f.areaMin, f.areaMax, f.region, f.completion, f.finishing, f.furnishing, f.title, f.seaView].filter(
+  return [f.areaMin, f.areaMax, f.region, f.completion, f.finishing, f.furnishing, f.title, f.seaView, f.inst].filter(
     (v) => v != null,
   ).length + f.feat.length;
 }
@@ -99,6 +101,7 @@ function buildWhere(f: CatalogFilters): Prisma.PropertyWhereInput {
   if (f.areaMin != null || f.areaMax != null) where.area = { gte: f.areaMin, lte: f.areaMax };
   if (f.sea) where.seaDistance = { lte: Number(f.sea) };
   if (f.seaView) where.seaView = true;
+  if (f.inst) where.installment = true;
   if (f.region) where.region = f.region;
   if (f.completion) where.completion = f.completion;
   if (f.finishing) where.finishing = f.finishing;
@@ -117,7 +120,8 @@ const ORDER: Record<string, Prisma.PropertyOrderByWithRelationInput> = {
 };
 
 export const withCover = {
-  images: { orderBy: { position: "asc" }, take: 1 },
+  // Обложка — первое фото. Планировки (kind = PLAN) в обложку не попадают.
+  images: { where: { kind: "PHOTO" }, orderBy: { position: "asc" }, take: 1 },
 } satisfies Prisma.PropertyInclude;
 
 export type PropertyWithCover = Prisma.PropertyGetPayload<{ include: typeof withCover }>;
@@ -136,6 +140,7 @@ export function toMapPoint(p: PropertyWithCover): MapPoint {
     meta: propertyMeta(p),
     sea: seaDistanceLabel(p.seaDistance),
     seaView: p.seaView,
+    installment: p.installment,
     place: [p.district, labelOf(REGIONS, p.region)].filter(Boolean).join(", "),
     status: p.status,
   };

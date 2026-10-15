@@ -12,6 +12,7 @@ function balloonHtml(p: MapPoint) {
   const chips = [
     p.sea ? `<span class="ym-chip ym-chip--sea">≈ ${escapeHtml(p.sea)}</span>` : "",
     p.seaView ? `<span class="ym-chip ym-chip--sea">Вид на море</span>` : "",
+    p.installment ? `<span class="ym-chip ym-chip--sun">Рассрочка</span>` : "",
     p.status === "RESERVED" ? `<span class="ym-chip ym-chip--sun">Забронирован</span>` : "",
   ].join("");
   return `

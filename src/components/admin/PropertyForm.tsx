@@ -12,6 +12,8 @@ import { LocationPicker } from "@/components/map";
 import { geocodeAddress } from "@/components/map/ymaps";
 import type { LatLng } from "@/components/map/LocationPicker";
 import { ImageUploader } from "./ImageUploader";
+import { InstallmentFields, NearbyEditor, VideoField } from "./PropertyExtras";
+import type { NearbyPlace } from "@/lib/places";
 
 export type PropertyFormValues = {
   id?: number;
@@ -42,6 +44,14 @@ export type PropertyFormValues = {
   lat: number | null;
   lng: number | null;
   images: string[];
+  plans: string[];
+  installment: boolean;
+  installmentDownPercent: number | null;
+  installmentMonths: number | null;
+  installmentRate: number | null;
+  installmentNote: string;
+  nearby: NearbyPlace[];
+  videoUrl: string;
 };
 
 const v = (n: number | null) => (n == null ? "" : String(n));
@@ -83,6 +93,8 @@ function SelectField({ id, label, value, options, empty, onChange }: {
 export function PropertyForm({ initial }: { initial: PropertyFormValues }) {
   const [state, action, pending] = useActionState(saveProperty, undefined);
   const [images, setImages] = useState(initial.images);
+  const [plans, setPlans] = useState(initial.plans);
+  const [price, setPrice] = useState(v(initial.price));
   const [coords, setCoords] = useState<LatLng | null>(
     initial.lat != null && initial.lng != null ? { lat: initial.lat, lng: initial.lng } : null,
   );
@@ -151,6 +163,7 @@ export function PropertyForm({ initial }: { initial: PropertyFormValues }) {
     >
       {initial.id && <input type="hidden" name="id" value={initial.id} />}
       <input type="hidden" name="images" value={JSON.stringify(images)} />
+      <input type="hidden" name="plans" value={JSON.stringify(plans)} />
       <input type="hidden" name="lat" value={coords?.lat ?? ""} />
       <input type="hidden" name="lng" value={coords?.lng ?? ""} />
 
@@ -176,7 +189,7 @@ export function PropertyForm({ initial }: { initial: PropertyFormValues }) {
       <Section title="Цена и характеристики">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Field id="price" label={`Цена, ${CURRENCY.symbol}`}>
-            <input id="price" name="price" required inputMode="decimal" defaultValue={v(initial.price)} className="input" placeholder="185000" />
+            <input id="price" name="price" required inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} className="input" placeholder="185000" />
           </Field>
           <Field id="area" label="Площадь, м²">
             <input id="area" name="area" required inputMode="decimal" defaultValue={v(initial.area)} className="input" placeholder="95" />
@@ -207,6 +220,10 @@ export function PropertyForm({ initial }: { initial: PropertyFormValues }) {
             <input id="yearBuilt" name="yearBuilt" inputMode="numeric" defaultValue={v(initial.yearBuilt)} className="input" />
           </Field>
         </div>
+      </Section>
+
+      <Section title="Рассрочка" hint="Если объект продаётся в рассрочку, отметьте галочку: появятся её условия и расчёт для покупателя.">
+        <InstallmentFields initial={initial} price={price} />
       </Section>
 
       <Section title="Состояние и документы">
@@ -271,8 +288,20 @@ export function PropertyForm({ initial }: { initial: PropertyFormValues }) {
         </p>
       </Section>
 
+      <Section title="Расстояния до важных мест">
+        <NearbyEditor initial={initial.nearby} coords={coords} />
+      </Section>
+
       <Section title="Фотографии">
         <ImageUploader value={images} onChange={setImages} />
+      </Section>
+
+      <Section title="Планировки и видео" hint="Необязательно. Если планировок или видео нет, на странице объекта эти блоки не появятся.">
+        <div>
+          <span className="label">Планировки</span>
+          <ImageUploader value={plans} onChange={setPlans} coverLabel={false} />
+        </div>
+        <VideoField initial={initial.videoUrl} />
       </Section>
 
       {state?.errors && (

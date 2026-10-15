@@ -4,7 +4,16 @@ import { useState } from "react";
 import { thumbUrl } from "@/lib/images";
 
 /* eslint-disable @next/next/no-img-element */
-export function ImageUploader({ value, onChange }: { value: string[]; onChange: (urls: string[]) => void }) {
+export function ImageUploader({
+  value,
+  onChange,
+  coverLabel = true,
+}: {
+  value: string[];
+  onChange: (urls: string[]) => void;
+  /** Подписывать первое изображение как обложку. Для планировок не нужно. */
+  coverLabel?: boolean;
+}) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
@@ -69,7 +78,7 @@ export function ImageUploader({ value, onChange }: { value: string[]; onChange: 
           }}
         />
         <span className="font-semibold">{uploading ? "Загружаем…" : "Перетащите фото сюда или нажмите, чтобы выбрать"}</span>
-        <span className="mt-1 text-muted">JPG, PNG или WEBP, до 20 МБ. Фото сжимаются автоматически. Первое фото станет обложкой.</span>
+        <span className="mt-1 text-muted">JPG, PNG или WEBP, до 20 МБ. Фото сжимаются автоматически.{coverLabel ? " Первое фото станет обложкой." : ""}</span>
       </label>
 
       {error && <p className="text-sm text-danger">{error}</p>}
@@ -79,7 +88,7 @@ export function ImageUploader({ value, onChange }: { value: string[]; onChange: 
           {value.map((url, i) => (
             <li key={url} className="relative overflow-hidden rounded-xl bg-warm ring-1 ring-line">
               <img src={thumbUrl(url)} alt="" className="aspect-[4/3] w-full object-cover" />
-              {i === 0 && <span className="badge absolute top-2 left-2 bg-accent text-white">Обложка</span>}
+              {coverLabel && i === 0 && <span className="badge absolute top-2 left-2 bg-accent text-white">Обложка</span>}
               <div className="flex items-center justify-between gap-1 bg-surface p-1.5">
                 <div className="flex gap-1">
                   <button type="button" onClick={() => move(i, -1)} disabled={i === 0} className="btn btn-secondary px-2.5 py-1" aria-label="Сдвинуть влево">←</button>

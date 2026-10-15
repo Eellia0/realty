@@ -97,6 +97,16 @@ model Property {
   seaDistance    Int? // расстояние до моря, м
   seaView        Boolean         @default(false)
   features       String[]        @default([]) // бассейн, сад, парковка и т.д.
+  // Рассрочка: показывается, только если installment = true
+  installment            Boolean @default(false)
+  installmentDownPercent Int? // первый взнос, % от цены
+  installmentMonths      Int? // срок рассрочки, месяцев
+  installmentRate        Float? // % годовых; 0 или пусто — без процентов
+  installmentNote        String? // условия своими словами
+  // Свои места рядом: [{ "name": "Школа", "distance": 800 }], расстояние в метрах.
+  // Аэропорты и города считаются автоматически по координатам.
+  nearby                 Json?
+  videoUrl               String? // ссылка на YouTube, RuTube или VK Видео
   region         String // GIRNE | ISKELE | ...
   district       String? // посёлок или район
   address        String
@@ -118,6 +128,7 @@ model PropertyImage {
   id         Int      @id @default(autoincrement())
   propertyId Int
   url        String
+  kind       String   @default("PHOTO") // PHOTO — фото объекта, PLAN — планировка
   position   Int      @default(0)
   property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { PropertyForm } from "@/components/admin/PropertyForm";
+import { parseNearby } from "@/lib/places";
 
 export default async function EditPropertyPage({ params }: { params: Promise<{ id: string }> }) {
   const id = Number((await params).id);
@@ -20,7 +21,11 @@ export default async function EditPropertyPage({ params }: { params: Promise<{ i
           finishing: p.finishing ?? "",
           furnishing: p.furnishing ?? "",
           titleDeed: p.titleDeed ?? "",
-          images: images.map((i) => i.url),
+          images: images.filter((i) => i.kind === "PHOTO").map((i) => i.url),
+          plans: images.filter((i) => i.kind === "PLAN").map((i) => i.url),
+          installmentNote: p.installmentNote ?? "",
+          nearby: parseNearby(p.nearby),
+          videoUrl: p.videoUrl ?? "",
         }}
       />
     </div>

@@ -12,6 +12,7 @@ export type MapPoint = {
   meta: string;
   sea: string | null;
   seaView: boolean;
+  installment: boolean;
   /** Посёлок и регион, например «Эсентепе, Кирения (Гирне)». */
   place: string;
   status: string;

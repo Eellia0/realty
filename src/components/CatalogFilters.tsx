@@ -81,6 +81,10 @@ export function CatalogFilters({ f }: { f: Filters }) {
             <span className="label">Удобства</span>
             <div className="flex flex-wrap gap-2">
               <label className="check">
+                <input type="checkbox" name="inst" value="1" defaultChecked={f.inst} className="accent-accent" />
+                Рассрочка
+              </label>
+              <label className="check">
                 <input type="checkbox" name="seaView" value="1" defaultChecked={f.seaView} className="accent-accent" />
                 Вид на море
               </label>

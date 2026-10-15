@@ -110,3 +110,28 @@ export function TelegramIcon({ className }: P) {
     </svg>
   );
 }
+
+export function PlaneIcon({ className }: P) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth={1.8}>
+      <path strokeLinejoin="round" d="M10.5 4.5c0-1 .7-2 1.5-2s1.5 1 1.5 2v5l7 4v2l-7-2v4.5l2.5 1.8V21L12 20l-4 1v-1.2l2.5-1.8V13.5l-7 2v-2l7-4v-5Z" />
+    </svg>
+  );
+}
+
+export function BuildingIcon({ className }: P) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth={1.8}>
+      <path strokeLinejoin="round" d="M4 20.5V8l6-3.5v16M10 20.5V10l10 3.5v7M2.5 20.5h19" />
+      <path strokeLinecap="round" d="M6.5 11v.01M6.5 14.5v.01M6.5 18v.01M14 15.5v.01M17 16.5v.01" />
+    </svg>
+  );
+}
+
+export function CloseIcon({ className }: P) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" d="m6 6 12 12M18 6 6 18" />
+    </svg>
+  );
+}

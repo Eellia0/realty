@@ -10,7 +10,9 @@ export default function NewPropertyPage() {
           price: null, area: null, plotArea: null, bedrooms: null, bathrooms: null, floor: null, floorsTotal: null,
           yearBuilt: null, completion: "READY", completionDate: "", finishing: "", furnishing: "", titleDeed: "",
           seaDistance: null, seaView: false, features: [], region: "GIRNE", district: "", address: "",
-          lat: null, lng: null, images: [],
+          lat: null, lng: null, images: [], plans: [],
+          installment: false, installmentDownPercent: null, installmentMonths: null, installmentRate: null, installmentNote: "",
+          nearby: [], videoUrl: "",
         }}
       />
     </div>

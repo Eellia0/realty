@@ -13,6 +13,8 @@ import {
 import { consume, waitMessage } from "@/lib/rate-limit";
 import { verifyTotp } from "@/lib/totp";
 import { UPLOAD_URL_RE, deleteUploadFiles } from "@/lib/uploads";
+import { videoEmbed } from "@/lib/video";
+import { Prisma } from "@prisma/client";
 
 // ---------- Объекты ----------
 
@@ -61,15 +63,48 @@ const propertySchema = z.object({
   lat: requiredNumber("Отметьте объект на карте").pipe(z.number().min(-90).max(90)),
   lng: requiredNumber("Отметьте объект на карте").pipe(z.number().min(-180).max(180)),
   images: z.array(z.string().regex(UPLOAD_URL_RE, "Некорректная ссылка на фото")).max(40, "Не больше 40 фотографий"),
+  plans: z.array(z.string().regex(UPLOAD_URL_RE, "Некорректная ссылка на планировку")).max(20, "Не больше 20 планировок"),
+  installment: z.boolean(),
+  installmentDownPercent: optionalInt("Первый взнос: целое число процентов").pipe(
+    z.number().min(0, "Первый взнос: от 0 до 100%").max(100, "Первый взнос: от 0 до 100%").optional(),
+  ),
+  installmentMonths: optionalInt("Срок рассрочки: целое число месяцев").pipe(
+    z.number().min(1, "Срок рассрочки: от 1 месяца").max(360, "Срок рассрочки: до 360 месяцев").optional(),
+  ),
+  installmentRate: optionalNumber("Ставка рассрочки: число").pipe(
+    z.number().min(0, "Ставка не может быть отрицательной").max(50, "Ставка: не больше 50% годовых").optional(),
+  ),
+  installmentNote: z.string().trim().max(300, "Условия рассрочки: не больше 300 символов"),
+  nearby: z
+    .array(
+      z.object({
+        name: z.string().trim().min(1, "Места рядом: укажите название").max(60, "Места рядом: название до 60 символов"),
+        distance: z.number().int().min(0).max(200000, "Места рядом: расстояние до 200 км"),
+      }),
+    )
+    .max(12, "Не больше 12 мест рядом"),
+  videoUrl: z
+    .string()
+    .trim()
+    .max(300)
+    .refine((v) => !v || videoEmbed(v) !== null, "Ссылка на видео: подходят YouTube, RuTube и VK Видео"),
+}).superRefine((d, ctx) => {
+  if (d.installment && d.installmentDownPercent == null) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Рассрочка: укажите первый взнос в процентах" });
+  }
+  if (d.installment && d.installmentMonths == null) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Рассрочка: укажите срок в месяцах" });
+  }
 });
 
 const TEXT_FIELDS = [
   "title", "description", "dealType", "propertyType", "status", "price", "area", "plotArea", "bedrooms", "bathrooms",
   "floor", "floorsTotal", "yearBuilt", "completion", "completionDate", "finishing", "furnishing", "titleDeed",
   "seaDistance", "region", "district", "address", "lat", "lng",
+  "installmentDownPercent", "installmentMonths", "installmentRate", "installmentNote", "videoUrl",
 ];
 
-function parseImages(v: FormDataEntryValue | null): unknown {
+function parseJson(v: FormDataEntryValue | null): unknown {
   try {
     return JSON.parse(String(v ?? "[]"));
   } catch {
@@ -85,16 +120,26 @@ export async function saveProperty(_prev: SaveState, fd: FormData): Promise<Save
   const parsed = propertySchema.safeParse({
     ...raw,
     seaView: fd.get("seaView") === "on",
+    installment: fd.get("installment") === "on",
     features: fd.getAll("features").map(String),
-    images: parseImages(fd.get("images")),
+    images: parseJson(fd.get("images")),
+    plans: parseJson(fd.get("plans")),
+    nearby: parseJson(fd.get("nearby")),
   });
   if (!parsed.success) {
     return { errors: [...new Set(parsed.error.issues.map((i) => i.message))] };
   }
 
-  const { images, ...d } = parsed.data;
+  const { images, plans, nearby, ...d } = parsed.data;
   const fields = {
     ...d,
+    // Без галочки «рассрочка» её параметры не хранятся.
+    installmentDownPercent: d.installment ? (d.installmentDownPercent ?? null) : null,
+    installmentMonths: d.installment ? (d.installmentMonths ?? null) : null,
+    installmentRate: d.installment ? (d.installmentRate ?? null) : null,
+    installmentNote: d.installment ? d.installmentNote || null : null,
+    nearby: nearby.length ? nearby : Prisma.DbNull,
+    videoUrl: d.videoUrl || null,
     district: d.district || null,
     completionDate: d.completion === "READY" ? null : d.completionDate || null,
     plotArea: d.plotArea ?? null,
@@ -108,7 +153,10 @@ export async function saveProperty(_prev: SaveState, fd: FormData): Promise<Save
     titleDeed: d.titleDeed ?? null,
     seaDistance: d.seaDistance ?? null,
   };
-  const imageRows = images.map((url, position) => ({ url, position }));
+  const imageRows = [
+    ...images.map((url, position) => ({ url, position, kind: "PHOTO" })),
+    ...plans.map((url, position) => ({ url, position, kind: "PLAN" })),
+  ];
 
   if (id) {
     const before = await db.propertyImage.findMany({ where: { propertyId: id }, select: { url: true } });
@@ -117,8 +165,9 @@ export async function saveProperty(_prev: SaveState, fd: FormData): Promise<Save
       db.propertyImage.deleteMany({ where: { propertyId: id } }),
       db.propertyImage.createMany({ data: imageRows.map((r) => ({ ...r, propertyId: id })) }),
     ]);
-    // Фото, которые убрали из объекта, удаляем с диска.
-    await deleteUploadFiles(before.map((i) => i.url).filter((u) => !images.includes(u)));
+    // Фото и планировки, которые убрали из объекта, удаляем с диска.
+    const keep = new Set([...images, ...plans]);
+    await deleteUploadFiles(before.map((i) => i.url).filter((u) => !keep.has(u)));
   } else {
     await db.property.create({ data: { ...fields, images: { create: imageRows } } });
   }

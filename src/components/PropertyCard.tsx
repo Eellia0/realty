@@ -35,6 +35,7 @@ export function PropertyCard({ p, isFavorite }: { p: PropertyWithCover; isFavori
             </span>
           </div>
           <div className="flex flex-wrap gap-1.5 pt-1">
+            {p.installment && <span className="chip bg-sun-soft text-[#9a6413]">Рассрочка</span>}
             {sea && (
               <span className="chip bg-sea-soft text-sea">
                 <WaveIcon className="h-3.5 w-3.5" />

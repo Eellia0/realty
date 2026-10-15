@@ -16,7 +16,8 @@ function csp(nonce: string, https: boolean) {
     `img-src 'self' data: blob: ${yandex}`,
     `font-src 'self' data: ${yandex}`,
     `connect-src 'self' ${yandex}${isDev ? " ws:" : ""}`,
-    `frame-src ${yandex}`,
+    // Видео объектов: только YouTube (без cookie), RuTube и VK Видео.
+    `frame-src ${yandex} https://www.youtube-nocookie.com https://rutube.ru https://vkvideo.ru https://vk.com`,
     "worker-src 'self' blob:",
     "object-src 'none'",
     "base-uri 'self'",

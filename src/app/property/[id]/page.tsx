@@ -21,6 +21,11 @@ import { PinIcon, WaveIcon } from "@/components/icons";
 import { PropertiesMap } from "@/components/map";
 import { ContactButtons } from "@/components/ContactButtons";
 import { siteUrl } from "@/lib/site-url";
+import { InstallmentBlock, DistancesBlock, VideoBlock } from "@/components/property/PropertyBlocks";
+import { PlansGallery } from "@/components/property/PlansGallery";
+import { installmentPlan } from "@/lib/installment";
+import { parseNearby } from "@/lib/places";
+import { videoEmbed } from "@/lib/video";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -84,6 +89,14 @@ export default async function PropertyPage({ params }: Props) {
     ["Цена за м²", p.propertyType !== "LAND" ? pricePerMeter(p.price, p.area) : null],
   ];
   const sea = seaDistanceLabel(p.seaDistance);
+  const photos = p.images.filter((i) => i.kind === "PHOTO").map((i) => i.url);
+  const plans = p.images.filter((i) => i.kind === "PLAN").map((i) => i.url);
+  const video = videoEmbed(p.videoUrl);
+  const nearby = parseNearby(p.nearby);
+  const hasInstallment = p.installment && p.installmentDownPercent != null && p.installmentMonths != null;
+  const monthly = hasInstallment
+    ? installmentPlan(p.price, p.installmentDownPercent!, p.installmentMonths!, p.installmentRate)?.monthly
+    : undefined;
   const pageUrl = `${await siteUrl()}/property/${p.id}`;
   const waMessage = `Здравствуйте! Интересует объект «${p.title}», ${formatPrice(p.price, p.dealType)}. ${pageUrl}`;
 
@@ -93,7 +106,7 @@ export default async function PropertyPage({ params }: Props) {
 
       <div className="mt-4 grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="space-y-8">
-          <Gallery images={p.images.map((i) => i.url)} title={p.title} />
+          <Gallery images={photos} title={p.title} />
 
           <div>
             <div className="flex flex-wrap items-center gap-2">
@@ -150,10 +163,21 @@ export default async function PropertyPage({ params }: Props) {
             </section>
           )}
 
+          {hasInstallment && (
+            <InstallmentBlock price={p.price} down={p.installmentDownPercent!} months={p.installmentMonths!}
+              rate={p.installmentRate} note={p.installmentNote} />
+          )}
+
+          {plans.length > 0 && <PlansGallery plans={plans} title={p.title} />}
+
+          {video && <VideoBlock video={video} title={p.title} />}
+
+          <DistancesBlock lat={p.lat} lng={p.lng} seaDistance={p.seaDistance} nearby={nearby} />
+
           <section>
             <h2 className="mb-3 text-xl font-bold">На карте</h2>
             <div className="card h-80 overflow-hidden">
-              <PropertiesMap points={[toMapPoint({ ...p, images: p.images.slice(0, 1) })]} zoom={15} />
+              <PropertiesMap points={[toMapPoint({ ...p, images: p.images.filter((i) => i.kind === "PHOTO").slice(0, 1) })]} zoom={15} />
             </div>
           </section>
         </div>
@@ -163,6 +187,11 @@ export default async function PropertyPage({ params }: Props) {
             <div>
               <div className="text-3xl font-extrabold text-accent-dark">{formatPrice(p.price, p.dealType)}</div>
               {p.propertyType !== "LAND" && <div className="text-sm text-muted">{pricePerMeter(p.price, p.area)}</div>}
+              {monthly != null && (
+                <div className="mt-2 inline-flex rounded-lg bg-sun-soft px-2.5 py-1 text-sm font-semibold text-[#7a5210]">
+                  Рассрочка от {formatPrice(monthly)} в месяц
+                </div>
+              )}
             </div>
             <FavoriteButton propertyId={p.id} initial={fav.has(p.id)} variant="full" />
             <ContactButtons message={waMessage} compact />
