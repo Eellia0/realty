@@ -8,3 +8,6 @@ prisma/*.db
 prisma/*.db-journal
 uploads/*
 !uploads/.gitkeep
+
+# Резервные копии базы и фото
+backups/
