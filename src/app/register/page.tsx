@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { AuthForm } from "@/components/AuthForm";
 
-export const metadata: Metadata = { title: "Регистрация" };
+export const metadata: Metadata = { title: "Регистрация", robots: { index: false } };
 
 export default async function RegisterPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
   const { next } = await searchParams;

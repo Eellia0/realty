@@ -15,6 +15,10 @@ export default async function AdminLoginPage() {
         <h1 className="mt-3 text-2xl font-extrabold">Вход для администратора</h1>
         <p className="mt-1 mb-6 text-sm text-muted">Управление объектами и заявками.</p>
         <AuthForm mode="admin" next="/admin" />
+        <p className="mt-5 text-center text-xs leading-relaxed text-muted">
+          Забыли пароль или потеряли телефон с кодами? Восстановление только на сервере: npm run admin -- create
+          или npm run admin -- reset-2fa. Подробности в ИНСТРУКЦИЯ.md.
+        </p>
       </div>
     </div>
   );
