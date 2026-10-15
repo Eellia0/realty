@@ -9,6 +9,8 @@ import { mergeGuestFavorites } from "@/lib/favorites";
 import { checkLimit, consume, hit, resetLimit, waitMessage } from "@/lib/rate-limit";
 import { clientIp } from "@/lib/request";
 import { verifyTotp } from "@/lib/totp";
+import { getI18n } from "@/i18n/server";
+import type { Messages } from "@/i18n/messages/ru";
 
 export type AuthState = { error?: string; needCode?: boolean } | undefined;
 
@@ -16,13 +18,14 @@ const LOGIN_WINDOW = 15 * 60 * 1000;
 const LOGIN_PER_EMAIL = 5; // неудачных попыток на один email за 15 минут
 const LOGIN_PER_IP = 30; // неудачных попыток с одного IP за 15 минут
 
-const emailSchema = z.string().trim().toLowerCase().email("Введите корректный email").max(200);
+const emailSchema = (t: Messages) => z.string().trim().toLowerCase().email(t.errors.email).max(200);
 
-const registerSchema = z.object({
-  name: z.string().trim().max(80).optional(),
-  email: emailSchema,
-  password: z.string().min(8, "Пароль должен быть не короче 8 символов").max(200, "Слишком длинный пароль"),
-});
+const registerSchema = (t: Messages) =>
+  z.object({
+    name: z.string().trim().max(80).optional(),
+    email: emailSchema(t),
+    password: z.string().min(8, t.errors.passwordShort).max(200, t.errors.passwordLong),
+  });
 
 /** Разрешаем редирект только на внутренние пути. */
 function safeNext(value: FormDataEntryValue | null, fallback = "/") {
@@ -31,11 +34,12 @@ function safeNext(value: FormDataEntryValue | null, fallback = "/") {
 }
 
 export async function registerAction(_prev: AuthState, fd: FormData): Promise<AuthState> {
-  if (fd.get("consent") !== "on") return { error: "Подтвердите согласие на обработку персональных данных" };
+  const { t, lp } = await getI18n();
+  if (fd.get("consent") !== "on") return { error: t.errors.consent };
   const limit = await consume(`register:ip:${await clientIp()}`, 5, 60 * 60 * 1000);
-  if (!limit.ok) return { error: waitMessage(limit.retryAfterSec) };
+  if (!limit.ok) return { error: waitMessage(limit.retryAfterSec, t.errors.tooMany) };
 
-  const parsed = registerSchema.safeParse({
+  const parsed = registerSchema(t).safeParse({
     name: fd.get("name") || undefined,
     email: fd.get("email"),
     password: fd.get("password"),
@@ -44,7 +48,7 @@ export async function registerAction(_prev: AuthState, fd: FormData): Promise<Au
   const { email, password, name } = parsed.data;
 
   if (await db.user.findUnique({ where: { email } })) {
-    return { error: "Пользователь с таким email уже зарегистрирован" };
+    return { error: t.errors.userExists };
   }
 
   // Роль всегда USER: администратор создаётся только командой npm run admin на сервере.
@@ -53,21 +57,22 @@ export async function registerAction(_prev: AuthState, fd: FormData): Promise<Au
   });
   await createSession(user.id, user.role);
   await mergeGuestFavorites(user.id);
-  redirect(safeNext(fd.get("next")));
+  redirect(safeNext(fd.get("next"), lp("/")));
 }
 
 export async function loginAction(_prev: AuthState, fd: FormData): Promise<AuthState> {
+  const { t, lp } = await getI18n();
   const adminMode = fd.get("mode") === "admin";
-  const parsedEmail = emailSchema.safeParse(fd.get("email"));
+  const parsedEmail = emailSchema(t).safeParse(fd.get("email"));
   const password = String(fd.get("password") ?? "").slice(0, 200);
-  if (!parsedEmail.success || !password) return { error: "Введите email и пароль" };
+  if (!parsedEmail.success || !password) return { error: t.errors.credentialsRequired };
   const email = parsedEmail.data;
 
   const ipKey = `login:ip:${await clientIp()}`;
   const emailKey = `login:email:${email}`;
   for (const [key, max] of [[ipKey, LOGIN_PER_IP], [emailKey, LOGIN_PER_EMAIL]] as const) {
     const res = await checkLimit(key, max);
-    if (!res.ok) return { error: waitMessage(res.retryAfterSec) };
+    if (!res.ok) return { error: waitMessage(res.retryAfterSec, t.errors.tooMany) };
   }
   const fail = async (state: AuthState): Promise<AuthState> => {
     await hit(ipKey, LOGIN_WINDOW);
@@ -79,7 +84,7 @@ export async function loginAction(_prev: AuthState, fd: FormData): Promise<AuthS
   const passwordOk = await verifyPassword(password, user?.passwordHash);
   // Одинаковый ответ для «нет пользователя», «неверный пароль» и «не администратор».
   if (!user || !passwordOk || (adminMode && user.role !== "ADMIN")) {
-    return fail({ error: "Неверный email или пароль" });
+    return fail({ error: t.errors.wrongCredentials });
   }
 
   // Второй шаг: код из приложения-аутентификатора.
@@ -88,7 +93,7 @@ export async function loginAction(_prev: AuthState, fd: FormData): Promise<AuthS
     if (!code) return { needCode: true };
     const step = verifyTotp(decrypt(user.totpSecret), code);
     if (step === null || (user.totpLastStep != null && step <= user.totpLastStep)) {
-      return fail({ needCode: true, error: "Неверный или уже использованный код" });
+      return fail({ needCode: true, error: t.errors.wrongCode });
     }
     await db.user.update({ where: { id: user.id }, data: { totpLastStep: step } });
   }
@@ -96,10 +101,11 @@ export async function loginAction(_prev: AuthState, fd: FormData): Promise<AuthS
   await resetLimit(emailKey);
   await createSession(user.id, user.role);
   if (user.role !== "ADMIN") await mergeGuestFavorites(user.id);
-  redirect(safeNext(fd.get("next"), user.role === "ADMIN" && adminMode ? "/admin" : "/"));
+  redirect(safeNext(fd.get("next"), user.role === "ADMIN" && adminMode ? "/admin" : lp("/")));
 }
 
 export async function logoutAction() {
+  const { lp } = await getI18n();
   await destroySession();
-  redirect("/");
+  redirect(lp("/"));
 }

@@ -7,6 +7,7 @@ const STYLES: Record<string, string> = {
   SOLD: "bg-danger-soft text-danger",
 };
 
-export function StatusBadge({ status }: { status: string }) {
-  return <span className={`badge ${STYLES[status] ?? "bg-warm text-muted"}`}>{labelOf(PROPERTY_STATUSES, status)}</span>;
+/** Метка статуса объекта. label — подпись на языке страницы; без неё — русская (для админки). */
+export function StatusBadge({ status, label }: { status: string; label?: string }) {
+  return <span className={`badge ${STYLES[status] ?? "bg-warm text-muted"}`}>{label ?? labelOf(PROPERTY_STATUSES, status)}</span>;
 }

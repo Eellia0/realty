@@ -46,13 +46,13 @@ export async function sendMail(mail: Mail): Promise<boolean> {
 }
 
 /** Простой HTML-шаблон письма в цветах сайта. Все значения должны быть уже экранированы. */
-export function mailLayout({ title, body, button }: { title: string; body: string; button?: { url: string; label: string } }) {
+export function mailLayout({ title, body, button, brand = "Новый адрес" }: { title: string; body: string; button?: { url: string; label: string }; brand?: string }) {
   const btn = button
     ? `<p style="margin:28px 0"><a href="${button.url}" style="display:inline-block;padding:12px 22px;border-radius:12px;background:#0e7c7b;color:#ffffff;text-decoration:none;font-weight:700">${button.label}</a></p>`
     : "";
   return `<!doctype html><html><body style="margin:0;background:#f6f2ea;font-family:Arial,Helvetica,sans-serif;color:#1c2b31">
 <div style="max-width:560px;margin:0 auto;padding:32px 16px">
-  <div style="background:linear-gradient(120deg,#0a5c5c,#0e7c7b,#1767a0);border-radius:18px 18px 0 0;padding:20px 24px;color:#ffffff;font-weight:800;font-size:18px">Новый адрес</div>
+  <div style="background:linear-gradient(120deg,#0a5c5c,#0e7c7b,#1767a0);border-radius:18px 18px 0 0;padding:20px 24px;color:#ffffff;font-weight:800;font-size:18px">${brand}</div>
   <div style="background:#ffffff;border-radius:0 0 18px 18px;padding:24px">
     <h1 style="margin:0 0 16px;font-size:20px">${title}</h1>
     ${body}

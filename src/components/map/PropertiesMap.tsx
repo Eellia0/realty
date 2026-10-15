@@ -5,14 +5,16 @@ import { MAP_CENTER, MAP_ZOOM } from "@/lib/site";
 import type { MapBounds, MapPoint } from "@/lib/types";
 import { addControls, escapeHtml, getLayouts, loadYmaps, priceMarkerOptions, type YMaps } from "./ymaps";
 import { MapError } from "./MapError";
+import { useI18n } from "@/i18n/client";
+import type { Messages } from "@/i18n/messages/ru";
 
 /** Карточка во всплывающем окне метки: без фото, в стиле сайта. Все значения экранируются. */
-function balloonHtml(p: MapPoint) {
+function balloonHtml(p: MapPoint, m: Messages["map"]) {
   const chips = [
     p.sea ? `<span class="ym-chip ym-chip--sea">≈ ${escapeHtml(p.sea)}</span>` : "",
-    p.seaView ? `<span class="ym-chip ym-chip--sea">Вид на море</span>` : "",
-    p.installment ? `<span class="ym-chip ym-chip--sun">Рассрочка</span>` : "",
-    p.status === "RESERVED" ? `<span class="ym-chip ym-chip--sun">Забронирован</span>` : "",
+    p.seaView ? `<span class="ym-chip ym-chip--sea">${escapeHtml(m.seaView)}</span>` : "",
+    p.installment ? `<span class="ym-chip ym-chip--sun">${escapeHtml(m.installment)}</span>` : "",
+    p.status === "RESERVED" ? `<span class="ym-chip ym-chip--sun">${escapeHtml(m.reserved)}</span>` : "",
   ].join("");
   return `
     <div class="ym-card">
@@ -25,7 +27,7 @@ function balloonHtml(p: MapPoint) {
         <div class="ym-card__title">${escapeHtml(p.title)}</div>
         <div class="ym-card__meta">${escapeHtml(p.meta)}</div>
         ${chips ? `<div class="ym-card__chips">${chips}</div>` : ""}
-        <a class="ym-card__btn" href="${escapeHtml(p.href)}">Подробнее →</a>
+        <a class="ym-card__btn" href="${escapeHtml(p.href)}">${escapeHtml(m.more)}</a>
       </div>
     </div>`;
 }
@@ -42,6 +44,8 @@ type Props = {
 
 /** Карта объектов на Яндекс Картах: метки с ценой, кластеры, карточка во всплывающем окне, зум колёсиком. */
 export default function PropertiesMap({ points, zoom = 15, onBoundsChange, highlightId = null }: Props) {
+  const { t } = useI18n();
+  const mapTextRef = useRef(t.map);
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<YMaps>(null);
   const managerRef = useRef<YMaps>(null);
@@ -58,6 +62,7 @@ export default function PropertiesMap({ points, zoom = 15, onBoundsChange, highl
 
   useEffect(() => {
     pointsRef.current = points;
+    mapTextRef.current = t.map;
     onBoundsRef.current = onBoundsChange;
   });
 
@@ -122,7 +127,7 @@ export default function PropertiesMap({ points, zoom = 15, onBoundsChange, highl
           type: "Feature",
           id: p.id,
           geometry: { type: "Point", coordinates: [p.lat, p.lng] },
-          properties: { iconContent: p.priceShort, hintContent: p.title, balloonHtml: balloonHtml(p) },
+          properties: { iconContent: p.priceShort, hintContent: p.title, balloonHtml: balloonHtml(p, mapTextRef.current) },
         })),
       });
       onBoundsRef.current?.(map.getBounds());

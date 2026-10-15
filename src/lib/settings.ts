@@ -9,6 +9,8 @@ export type Settings = {
   email: string | null;
   address: string | null;
   workingHours: string | null;
+  addressEn: string | null;
+  workingHoursEn: string | null;
   legalName: string | null;
   notifyEmail: string | null;
 };
@@ -20,6 +22,8 @@ const EMPTY: Settings = {
   email: null,
   address: null,
   workingHours: null,
+  addressEn: null,
+  workingHoursEn: null,
   legalName: null,
   notifyEmail: null,
 };

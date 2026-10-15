@@ -3,6 +3,7 @@ import { cache } from "react";
 import { cookies } from "next/headers";
 import { unstable_rethrow } from "next/navigation";
 import { db } from "./db";
+import { getLocale } from "@/i18n/server";
 import { BASE_CURRENCY, createMoney, isCurrency, type CurrencyCode, type Money, type Rates } from "./money";
 
 // Курсы валют ЦБ РФ. Порядок источников:
@@ -82,9 +83,12 @@ export async function getCurrencyCode(): Promise<CurrencyCode> {
   return isCurrency(v) ? v : BASE_CURRENCY;
 }
 
-/** Валюта посетителя с курсами. Если курсов нет, цены показываются в фунтах. Один раз за запрос. */
+/**
+ * Валюта посетителя с курсами и форматом чисел его языка.
+ * Если курсов нет, цены показываются в фунтах. Один раз за запрос.
+ */
 export const getMoney = cache(async (): Promise<Money> => {
-  const [code, rates] = await Promise.all([getCurrencyCode(), getRates()]);
-  if (code !== BASE_CURRENCY && !rates) return createMoney(BASE_CURRENCY, null, true);
-  return createMoney(code, rates);
+  const [code, rates, locale] = await Promise.all([getCurrencyCode(), getRates(), getLocale()]);
+  if (code !== BASE_CURRENCY && !rates) return createMoney(BASE_CURRENCY, null, true, locale);
+  return createMoney(code, rates, false, locale);
 });

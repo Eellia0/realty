@@ -19,8 +19,10 @@ export function loadYmaps(): Promise<YMaps> {
   if (window.ymaps?.Map) return Promise.resolve(window.ymaps);
   loading ??= new Promise((resolve, reject) => {
     const key = process.env.NEXT_PUBLIC_YANDEX_MAPS_API_KEY;
+    // Язык подписей на карте — как у страницы (атрибут lang у <html>).
+    const lang = document.documentElement.lang === "en" ? "en_US" : "ru_RU";
     const script = document.createElement("script");
-    script.src = `https://api-maps.yandex.ru/2.1/?lang=ru_RU${key ? `&apikey=${encodeURIComponent(key)}` : ""}`;
+    script.src = `https://api-maps.yandex.ru/2.1/?lang=${lang}${key ? `&apikey=${encodeURIComponent(key)}` : ""}`;
     script.async = true;
     script.onload = () => window.ymaps!.ready(() => resolve(window.ymaps), reject);
     script.onerror = () => {

@@ -26,6 +26,11 @@ export default async function EditPropertyPage({ params }: { params: Promise<{ i
           installmentNote: p.installmentNote ?? "",
           nearby: parseNearby(p.nearby),
           videoUrl: p.videoUrl ?? "",
+          titleEn: p.titleEn ?? "",
+          descriptionEn: p.descriptionEn ?? "",
+          districtEn: p.districtEn ?? "",
+          addressEn: p.addressEn ?? "",
+          installmentNoteEn: p.installmentNoteEn ?? "",
         }}
       />
     </div>

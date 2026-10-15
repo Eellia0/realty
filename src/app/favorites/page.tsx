@@ -4,12 +4,16 @@ import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { getFavoriteIds } from "@/lib/favorites";
 import { withCover } from "@/lib/properties";
+import { getI18n } from "@/i18n/server";
 import { PropertyCard } from "@/components/PropertyCard";
 
-export const metadata: Metadata = { title: "Избранное" };
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getI18n();
+  return { title: t.meta.favorites, robots: { index: false } };
+}
 
 export default async function FavoritesPage() {
-  const [user, ids] = await Promise.all([getCurrentUser(), getFavoriteIds()]);
+  const [user, ids, { t, lp }] = await Promise.all([getCurrentUser(), getFavoriteIds(), getI18n()]);
   const found = ids.length
     ? await db.property.findMany({ where: { id: { in: ids }, status: { not: "DRAFT" } }, include: withCover })
     : [];
@@ -17,17 +21,18 @@ export default async function FavoritesPage() {
   const order = new Map(ids.map((id, i) => [id, i]));
   const items = found.sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0));
   if (!user) items.reverse(); // у гостя в cookie новые id в конце
+  const back = encodeURIComponent(lp("/favorites"));
 
   return (
     <div className="container-page py-8">
-      <h1 className="mb-6 text-3xl font-extrabold tracking-tight">Избранное</h1>
+      <h1 className="mb-6 text-3xl font-extrabold tracking-tight">{t.favorites.title}</h1>
 
       {!user && (
         <div className="mb-6 rounded-2xl bg-accent-soft p-4 text-sm text-accent-dark">
-          Избранное сохранено в этом браузере.{" "}
-          <Link href="/register?next=/favorites" className="font-semibold underline">Зарегистрируйтесь</Link> или{" "}
-          <Link href="/login?next=/favorites" className="font-semibold underline">войдите</Link>, чтобы оно было доступно на любом устройстве.
-          Всё, что вы уже добавили, перенесётся в аккаунт.
+          {t.favorites.guestBefore}{" "}
+          <Link href={lp(`/register?next=${back}`)} className="font-semibold underline">{t.favorites.register}</Link> {t.favorites.or}{" "}
+          <Link href={lp(`/login?next=${back}`)} className="font-semibold underline">{t.favorites.login}</Link>
+          {t.favorites.guestAfter}
         </div>
       )}
 
@@ -37,8 +42,8 @@ export default async function FavoritesPage() {
         </div>
       ) : (
         <div className="card p-10 text-center">
-          <p className="text-muted">Здесь пока пусто. Нажмите на сердечко у объекта, чтобы сохранить его.</p>
-          <Link href="/catalog" className="btn btn-primary mt-4">Перейти в каталог</Link>
+          <p className="text-muted">{t.favorites.empty}</p>
+          <Link href={lp("/catalog")} className="btn btn-primary mt-4">{t.favorites.toCatalog}</Link>
         </div>
       )}
     </div>

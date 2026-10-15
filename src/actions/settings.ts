@@ -33,11 +33,13 @@ const settingsSchema = z.object({
   email: optional(z.string().trim().toLowerCase().email("Почта для клиентов указана неверно").max(200)),
   address: optional(z.string().trim().max(200)),
   workingHours: optional(z.string().trim().max(100)),
+  addressEn: optional(z.string().trim().max(200)),
+  workingHoursEn: optional(z.string().trim().max(100)),
   legalName: optional(z.string().trim().max(200)),
   notifyEmail: optional(z.string().trim().toLowerCase().email("Почта для заявок указана неверно").max(200)),
 });
 
-const KEYS = ["phone", "whatsapp", "telegram", "email", "address", "workingHours", "legalName", "notifyEmail"] as const;
+const KEYS = ["phone", "whatsapp", "telegram", "email", "address", "workingHours", "addressEn", "workingHoursEn", "legalName", "notifyEmail"] as const;
 
 export async function saveSettings(_prev: SettingsState, fd: FormData): Promise<SettingsState> {
   await requireAdmin();
@@ -52,6 +54,8 @@ export async function saveSettings(_prev: SettingsState, fd: FormData): Promise<
     email: d.email ?? null,
     address: d.address ?? null,
     workingHours: d.workingHours ?? null,
+    addressEn: d.addressEn ?? null,
+    workingHoursEn: d.workingHoursEn ?? null,
     legalName: d.legalName ?? null,
     notifyEmail: d.notifyEmail ?? null,
   };

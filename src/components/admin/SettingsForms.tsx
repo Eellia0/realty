@@ -45,6 +45,9 @@ export function SettingsForm({ settings }: { settings: Settings }) {
           <Field name="email" label="Почта для клиентов" type="email" value={settings.email} placeholder="info@example.com" />
           <Field name="address" label="Адрес офиса" value={settings.address} placeholder="Кирения, ул. Зия Рызки, 12" />
           <Field name="workingHours" label="Часы работы" value={settings.workingHours} placeholder="Пн–Сб, 9:00–19:00" />
+          <Field name="addressEn" label="Адрес офиса по-английски" value={settings.addressEn} placeholder="12 Ziya Rızkı St, Kyrenia"
+            hint="Для английской версии сайта. Пусто — покажется русский адрес." />
+          <Field name="workingHoursEn" label="Часы работы по-английски" value={settings.workingHoursEn} placeholder="Mon–Sat, 9:00–19:00" />
         </div>
       </section>
 

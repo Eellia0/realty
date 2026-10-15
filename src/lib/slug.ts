@@ -1,6 +1,7 @@
-// Понятные адреса страниц объектов: /property/12-penthaus-s-vidom-na-more.
+// Понятные адреса страниц объектов: /property/12-penthaus-s-vidom-na-more, /en/property/12-penthouse-sea-view.
 // Число в начале — номер объекта, по нему страница и находится. Текст после него только для людей
 // и поисковиков: если он устарел (объект переименовали), страница перенаправит на актуальный адрес.
+import { localizePath, type Locale } from "@/i18n/config";
 
 const MAP: Record<string, string> = {
   а: "a", б: "b", в: "v", г: "g", д: "d", е: "e", ё: "e", ж: "zh", з: "z", и: "i", й: "y", к: "k", л: "l", м: "m",
@@ -22,10 +23,18 @@ export function slugify(text: string, maxLength = 70) {
   return slug.slice(0, maxLength).replace(/-+$/g, "");
 }
 
-/** Адрес страницы объекта. */
-export function propertyPath(p: { id: number; title: string }) {
-  const slug = slugify(p.title);
+type Sluggable = { id: number; title: string; titleEn?: string | null };
+
+/** Адрес объекта без языкового префикса: «/property/12-penthaus-…». */
+export function propertyBasePath(p: Sluggable, locale: Locale = "ru") {
+  const title = locale === "en" && p.titleEn ? p.titleEn : p.title;
+  const slug = slugify(title);
   return slug ? `/property/${p.id}-${slug}` : `/property/${p.id}`;
+}
+
+/** Адрес страницы объекта на нужном языке. */
+export function propertyPath(p: Sluggable, locale: Locale = "ru") {
+  return localizePath(locale, propertyBasePath(p, locale));
 }
 
 /** Номер объекта из сегмента адреса «12-penthaus-…» или «12». */

@@ -3,10 +3,12 @@
 import { startTransition, useActionState, useRef } from "react";
 import { loginAction, registerAction } from "@/actions/auth";
 import { ConsentCheckbox } from "./ConsentCheckbox";
+import { useI18n } from "@/i18n/client";
 
 type Mode = "login" | "register" | "admin";
 
 export function AuthForm({ mode, next }: { mode: Mode; next?: string }) {
+  const { t } = useI18n();
   const [state, action, pending] = useActionState(mode === "register" ? registerAction : loginAction, undefined);
   const codeRef = useRef<HTMLInputElement>(null);
   const needCode = Boolean(state?.needCode);
@@ -28,16 +30,16 @@ export function AuthForm({ mode, next }: { mode: Mode; next?: string }) {
       <div className={needCode ? "hidden" : "space-y-4"}>
         {mode === "register" && (
           <div>
-            <label className="label" htmlFor="name">Имя</label>
-            <input id="name" name="name" maxLength={80} className="input" autoComplete="name" placeholder="Как к вам обращаться" />
+            <label className="label" htmlFor="name">{t.auth.name}</label>
+            <input id="name" name="name" maxLength={80} className="input" autoComplete="name" placeholder={t.auth.namePlaceholder} />
           </div>
         )}
         <div>
-          <label className="label" htmlFor="email">Email</label>
+          <label className="label" htmlFor="email">{t.auth.email}</label>
           <input id="email" name="email" type="email" required maxLength={200} className="input" autoComplete={mode === "admin" ? "username" : "email"} placeholder="you@example.com" />
         </div>
         <div>
-          <label className="label" htmlFor="password">Пароль</label>
+          <label className="label" htmlFor="password">{t.auth.password}</label>
           <input
             id="password"
             name="password"
@@ -47,7 +49,7 @@ export function AuthForm({ mode, next }: { mode: Mode; next?: string }) {
             minLength={mode === "register" ? 8 : undefined}
             className="input"
             autoComplete={mode === "register" ? "new-password" : "current-password"}
-            placeholder={mode === "register" ? "Не короче 8 символов" : ""}
+            placeholder={mode === "register" ? t.auth.passwordHint : ""}
           />
         </div>
         {mode === "register" && <ConsentCheckbox id="consent-register" />}
@@ -55,7 +57,7 @@ export function AuthForm({ mode, next }: { mode: Mode; next?: string }) {
 
       {needCode && (
         <div>
-          <label className="label" htmlFor="code">Код из приложения-аутентификатора</label>
+          <label className="label" htmlFor="code">{t.auth.code}</label>
           <input
             id="code"
             ref={codeRef}
@@ -69,14 +71,14 @@ export function AuthForm({ mode, next }: { mode: Mode; next?: string }) {
             className="input text-center text-lg tracking-[0.4em]"
             placeholder="000000"
           />
-          <p className="mt-1.5 text-xs text-muted">Откройте Яндекс Ключ или Google Authenticator и введите шесть цифр.</p>
+          <p className="mt-1.5 text-xs text-muted">{t.auth.codeHint}</p>
         </div>
       )}
 
       {state?.error && <p className="rounded-xl bg-danger-soft px-3 py-2 text-sm text-danger">{state.error}</p>}
 
       <button disabled={pending} className="btn btn-primary w-full">
-        {pending ? "Подождите…" : mode === "register" ? "Зарегистрироваться" : needCode ? "Подтвердить" : "Войти"}
+        {pending ? t.auth.wait : mode === "register" ? t.auth.submitRegister : needCode ? t.auth.confirm : t.auth.submitLogin}
       </button>
     </form>
   );

@@ -52,6 +52,11 @@ export type PropertyFormValues = {
   installmentNote: string;
   nearby: NearbyPlace[];
   videoUrl: string;
+  titleEn: string;
+  descriptionEn: string;
+  districtEn: string;
+  addressEn: string;
+  installmentNoteEn: string;
 };
 
 const v = (n: number | null) => (n == null ? "" : String(n));
@@ -290,6 +295,28 @@ export function PropertyForm({ initial }: { initial: PropertyFormValues }) {
 
       <Section title="Расстояния до важных мест">
         <NearbyEditor initial={initial.nearby} coords={coords} />
+      </Section>
+
+      <Section title="Английская версия" hint="Необязательно. Эти тексты показываются на английском сайте (адреса с /en). Пустое поле — там будет русский текст.">
+        <Field id="titleEn" label="Заголовок по-английски">
+          <input id="titleEn" name="titleEn" maxLength={200} defaultValue={initial.titleEn} className="input" placeholder="2-bedroom penthouse with sea view" />
+        </Field>
+        <Field id="descriptionEn" label="Описание по-английски">
+          <textarea id="descriptionEn" name="descriptionEn" rows={5} maxLength={10000} defaultValue={initial.descriptionEn} className="input"
+            placeholder="The complex, the view, nearby amenities, payment terms" />
+        </Field>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field id="districtEn" label="Посёлок по-английски">
+            <input id="districtEn" name="districtEn" maxLength={100} defaultValue={initial.districtEn} className="input" placeholder="Esentepe" />
+          </Field>
+          <Field id="addressEn" label="Адрес по-английски">
+            <input id="addressEn" name="addressEn" maxLength={300} defaultValue={initial.addressEn} className="input" placeholder="Long Beach, Iskele" />
+          </Field>
+        </div>
+        <Field id="installmentNoteEn" label="Условия рассрочки по-английски">
+          <input id="installmentNoteEn" name="installmentNoteEn" maxLength={300} defaultValue={initial.installmentNoteEn} className="input"
+            placeholder="Final payment on handover of the keys" />
+        </Field>
       </Section>
 
       <Section title="Фотографии">

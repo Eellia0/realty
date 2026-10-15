@@ -1,9 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 // Выполняется перед каждой страницей:
-// 1. Ставит Content-Security-Policy с одноразовым nonce. Браузер выполнит только скрипты Next.js
+// 1. Язык: адреса /en/… отдаются английской версией. Префикс снимается (страницы общие для обоих языков),
+//    а язык передаётся странице в заголовке x-locale. Админка только на русском: /en/admin → /admin.
+// 2. Ставит Content-Security-Policy с одноразовым nonce. Браузер выполнит только скрипты Next.js
 //    и то, что они подгрузили сами (Яндекс Карты). Внедрённый посторонний скрипт не запустится.
-// 2. Быстро отсекает анонимные запросы к админке. Полная проверка прав остаётся в layout и в каждом действии.
+// 3. Быстро отсекает анонимные запросы к админке. Полная проверка прав остаётся в layout и в каждом действии.
 
 const isDev = process.env.NODE_ENV === "development";
 
@@ -28,7 +30,17 @@ function csp(nonce: string, https: boolean) {
 }
 
 export function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+  const url = request.nextUrl;
+  let pathname = url.pathname;
+  let locale = "ru";
+
+  if (pathname === "/en" || pathname.startsWith("/en/")) {
+    locale = "en";
+    pathname = pathname.slice(3) || "/";
+    if (pathname.startsWith("/admin")) {
+      return NextResponse.redirect(new URL(pathname + url.search, request.url));
+    }
+  }
 
   if (pathname.startsWith("/admin") && pathname !== "/admin/login") {
     const hasSession = request.cookies.has("session") || request.cookies.has("__Host-session");
@@ -36,25 +48,28 @@ export function proxy(request: NextRequest) {
   }
 
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
-  const https = request.nextUrl.protocol === "https:" || request.headers.get("x-forwarded-proto") === "https";
+  const https = url.protocol === "https:" || request.headers.get("x-forwarded-proto") === "https";
   const policy = csp(nonce, https);
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-nonce", nonce);
   requestHeaders.set("Content-Security-Policy", policy);
+  requestHeaders.set("x-locale", locale);
+  // Адрес без языкового префикса: по нему переключатель языка строит ссылку на ту же страницу.
+  requestHeaders.set("x-path", pathname + url.search);
 
-  const response = NextResponse.next({ request: { headers: requestHeaders } });
+  let response: NextResponse;
+  if (locale !== "ru") {
+    const target = url.clone();
+    target.pathname = pathname;
+    response = NextResponse.rewrite(target, { request: { headers: requestHeaders } });
+  } else {
+    response = NextResponse.next({ request: { headers: requestHeaders } });
+  }
   response.headers.set("Content-Security-Policy", policy);
   return response;
 }
 
+// Все страницы, включая предзагрузку: иначе английские ссылки предзагружались бы без перевода адреса.
 export const config = {
-  matcher: [
-    {
-      source: "/((?!api|uploads|_next/static|_next/image|favicon.ico).*)",
-      missing: [
-        { type: "header", key: "next-router-prefetch" },
-        { type: "header", key: "purpose", value: "prefetch" },
-      ],
-    },
-  ],
+  matcher: ["/((?!api|uploads|_next/static|_next/image|favicon.ico).*)"],
 };

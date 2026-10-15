@@ -13,6 +13,7 @@ export default function NewPropertyPage() {
           lat: null, lng: null, images: [], plans: [],
           installment: false, installmentDownPercent: null, installmentMonths: null, installmentRate: null, installmentNote: "",
           nearby: [], videoUrl: "",
+          titleEn: "", descriptionEn: "", districtEn: "", addressEn: "", installmentNoteEn: "",
         }}
       />
     </div>

@@ -1,6 +1,7 @@
 // Демо-объекты на Северном Кипре. Добавляются, только если в базе ещё нет объектов.
 // Администратор здесь не создаётся: для этого есть команда npm run admin -- create.
 import { PrismaClient, type Prisma } from "@prisma/client";
+import demoEn from "./demo-en.json";
 
 const db = new PrismaClient();
 
@@ -96,7 +97,9 @@ async function main() {
     return;
   }
   for (const data of demo) {
-    await db.property.create({ data: { ...data, status: "PUBLISHED", dealType: "SALE" } });
+    // Английские тексты для английской версии сайта лежат в demo-en.json.
+    const en = (demoEn as Record<string, Partial<Prisma.PropertyCreateInput>>)[data.title] ?? {};
+    await db.property.create({ data: { ...data, ...en, status: "PUBLISHED", dealType: "SALE" } });
   }
   console.log(`Добавлено демо-объектов: ${demo.length}`);
 }

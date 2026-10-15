@@ -45,7 +45,7 @@ export async function resetLimit(key: string) {
   await db.rateLimit.deleteMany({ where: { key } });
 }
 
-export function waitMessage(sec: number) {
-  const min = Math.ceil(sec / 60);
-  return `Слишком много попыток. Попробуйте через ${min} мин.`;
+/** Текст «попробуйте через N мин.». template — из словаря языка посетителя, по умолчанию русский. */
+export function waitMessage(sec: number, template = "Слишком много попыток. Попробуйте через {min} мин.") {
+  return template.replace("{min}", String(Math.ceil(sec / 60)));
 }

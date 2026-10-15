@@ -10,6 +10,8 @@ import type { MapPoint } from "./types";
 import { thumbUrl } from "./images";
 import { propertyPath } from "./slug";
 import { BASE_CURRENCY, isCurrency, toGbp, type CurrencyCode, type Money, type Rates } from "./money";
+import { MESSAGES } from "@/i18n/server";
+import { placeLine, propertyTexts } from "./localize";
 
 export const PAGE_SIZE = 12;
 
@@ -139,8 +141,11 @@ export const withCover = {
 
 export type PropertyWithCover = Prisma.PropertyGetPayload<{ include: typeof withCover }>;
 
-/** Данные метки на карте. Цена уже переведена в валюту посетителя. */
+/** Данные метки на карте. Цена уже в валюте посетителя, тексты — на его языке (язык берётся из money). */
 export function toMapPoint(p: PropertyWithCover, money: Money): MapPoint {
+  const locale = money.locale;
+  const t = MESSAGES[locale];
+  const x = propertyTexts(p, locale, t);
   return {
     id: p.id,
     lat: p.lat,
@@ -149,17 +154,17 @@ export function toMapPoint(p: PropertyWithCover, money: Money): MapPoint {
     priceText: money.format(p.price, p.dealType),
     priceShort: money.formatShort(p.price),
     dealType: p.dealType,
-    title: p.title,
-    address: p.address,
+    title: x.title,
+    address: x.address,
     cover: p.images[0] ? thumbUrl(p.images[0].url) : null,
-    typeLabel: labelOf(PROPERTY_TYPES, p.propertyType),
-    meta: propertyMeta(p),
-    sea: seaDistanceLabel(p.seaDistance),
+    typeLabel: x.typeLabel,
+    meta: propertyMeta(p, locale),
+    sea: seaDistanceLabel(p.seaDistance, locale),
     seaView: p.seaView,
     installment: p.installment,
-    place: [p.district, labelOf(REGIONS, p.region)].filter(Boolean).join(", "),
+    place: placeLine(p, locale, t),
     status: p.status,
-    href: propertyPath(p),
+    href: propertyPath(p, locale),
   };
 }
 

@@ -1,32 +1,26 @@
 import type { Metadata } from "next";
 import { getCatalogPage, getCatalogPoints, parseFilters } from "@/lib/properties";
 import { getFavoriteIds } from "@/lib/favorites";
+import { getMoney } from "@/lib/currency";
+import { fmt, objectsWord } from "@/i18n/config";
+import { getI18n } from "@/i18n/server";
+import { languageAlternates } from "@/i18n/alternates";
 import { CatalogFilters } from "@/components/CatalogFilters";
 import { CatalogMapView } from "@/components/CatalogMapView";
 import { PropertyCard } from "@/components/PropertyCard";
 import { Pagination } from "@/components/Pagination";
 import { ViewSwitch } from "@/components/ViewSwitch";
-import { getMoney } from "@/lib/currency";
 
-export const metadata: Metadata = {
-  title: "Каталог недвижимости",
-  description:
-    "Квартиры, пентхаусы, виллы и участки на Северном Кипре: фильтры по расстоянию до моря, региону, отделке, рассрочке. Объекты на карте.",
-  alternates: { canonical: "/catalog" },
-};
-
-function plural(n: number) {
-  const m10 = n % 10, m100 = n % 100;
-  if (m10 === 1 && m100 !== 11) return "объект";
-  if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return "объекта";
-  return "объектов";
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getI18n();
+  return { title: t.meta.catalog, description: t.meta.catalogDescription, alternates: await languageAlternates("/catalog") };
 }
 
 type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> };
 
 export default async function CatalogPage({ searchParams }: Props) {
   const f = parseFilters(await searchParams);
-  const [favIds, money] = await Promise.all([getFavoriteIds(), getMoney()]);
+  const [favIds, money, { locale, t }] = await Promise.all([getFavoriteIds(), getMoney(), getI18n()]);
   const isMap = f.view === "map";
 
   const list = isMap ? null : await getCatalogPage(f, money.rates);
@@ -39,10 +33,8 @@ export default async function CatalogPage({ searchParams }: Props) {
     <div className={isMap ? "mx-auto w-full max-w-[1920px] px-4 py-6 sm:px-6" : "container-page py-8"}>
       <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight">Каталог недвижимости</h1>
-          <p className="mt-1 text-muted">
-            Найдено {total} {plural(total)}
-          </p>
+          <h1 className="text-3xl font-extrabold tracking-tight">{t.catalog.title}</h1>
+          <p className="mt-1 text-muted">{fmt(t.catalog.found, { n: total, objects: objectsWord(total, locale) })}</p>
         </div>
         <ViewSwitch f={f} />
       </div>
@@ -61,9 +53,7 @@ export default async function CatalogPage({ searchParams }: Props) {
               <Pagination f={f} pages={list.pages} />
             </>
           ) : (
-            <div className="card p-10 text-center text-muted">
-              По этим параметрам ничего не нашлось. Попробуйте ослабить фильтры.
-            </div>
+            <div className="card p-10 text-center text-muted">{t.catalog.empty}</div>
           ))}
       </div>
     </div>

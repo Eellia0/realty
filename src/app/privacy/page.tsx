@@ -1,12 +1,19 @@
 import type { Metadata } from "next";
 import { getSettings } from "@/lib/settings";
 import { SITE_NAME } from "@/lib/site";
+import { getI18n } from "@/i18n/server";
+import { languageAlternates } from "@/i18n/alternates";
+import { PrivacyEn } from "@/components/privacy/PrivacyEn";
 
-export const metadata: Metadata = { title: "Политика конфиденциальности" };
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getI18n();
+  return { title: t.meta.privacy, alternates: await languageAlternates("/privacy") };
+}
 
 // Шаблон политики. Описывает ровно то, что собирает сайт. Перед запуском его стоит показать юристу.
 export default async function PrivacyPage() {
-  const s = await getSettings();
+  const [s, { locale }] = await Promise.all([getSettings(), getI18n()]);
+  if (locale === "en") return <PrivacyEn settings={s} />;
   const operator = s.legalName || `владелец сайта «${SITE_NAME}»`;
   const contact = s.email || s.phone || "контакты на странице «Контакты»";
 

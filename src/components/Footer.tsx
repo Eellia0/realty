@@ -1,11 +1,15 @@
 import Link from "next/link";
 import { contactLinks, getSettings } from "@/lib/settings";
-import { SITE_DESCRIPTION, SITE_NAME } from "@/lib/site";
+import { fmt } from "@/i18n/config";
+import { getI18n } from "@/i18n/server";
 import { MailIcon, PhoneIcon, TelegramIcon, WhatsAppIcon } from "./icons";
 
 export async function Footer() {
-  const settings = await getSettings();
+  const [settings, { locale, t, lp }] = await Promise.all([getSettings(), getI18n()]);
   const links = contactLinks(settings);
+  const en = locale === "en";
+  const address = (en && settings.addressEn) || settings.address;
+  const hours = (en && settings.workingHoursEn) || settings.workingHours;
   const contacts = [
     links.phone && { ...links.phone, icon: <PhoneIcon className="h-4 w-4" />, external: false },
     links.whatsapp && { ...links.whatsapp, icon: <WhatsAppIcon className="h-4 w-4" />, external: true },
@@ -17,23 +21,23 @@ export async function Footer() {
     <footer className="mt-16 border-t border-line bg-warm/60">
       <div className="container-page grid gap-8 py-10 text-sm text-muted sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr]">
         <div>
-          <div className="text-base font-bold text-ink">{SITE_NAME}</div>
-          <p className="mt-1 max-w-sm">{SITE_DESCRIPTION}</p>
-          {settings.address && <p className="mt-3">{settings.address}</p>}
-          {settings.workingHours && <p>{settings.workingHours}</p>}
+          <div className="text-base font-bold text-ink">{t.meta.siteName}</div>
+          <p className="mt-1 max-w-sm">{t.meta.description}</p>
+          {address && <p className="mt-3">{address}</p>}
+          {hours && <p>{hours}</p>}
         </div>
 
         <nav className="flex flex-col gap-2">
-          <span className="font-semibold text-ink">Разделы</span>
-          <Link href="/catalog" className="hover:text-ink">Каталог</Link>
-          <Link href="/contacts" className="hover:text-ink">Контакты</Link>
-          <Link href="/favorites" className="hover:text-ink">Избранное</Link>
-          <Link href="/privacy" className="hover:text-ink">Политика конфиденциальности</Link>
+          <span className="font-semibold text-ink">{t.nav.sections}</span>
+          <Link href={lp("/catalog")} className="hover:text-ink">{t.nav.catalog}</Link>
+          <Link href={lp("/contacts")} className="hover:text-ink">{t.nav.contacts}</Link>
+          <Link href={lp("/favorites")} className="hover:text-ink">{t.nav.favorites}</Link>
+          <Link href={lp("/privacy")} className="hover:text-ink">{t.nav.privacy}</Link>
         </nav>
 
         {contacts.length > 0 && (
           <div className="flex flex-col gap-2">
-            <span className="font-semibold text-ink">Связаться</span>
+            <span className="font-semibold text-ink">{t.nav.contactUs}</span>
             {contacts.map((c) => (
               <a
                 key={c.href}
@@ -49,7 +53,7 @@ export async function Footer() {
         )}
       </div>
       <div className="border-t border-line">
-        <div className="container-page py-4 text-xs text-muted">© {new Date().getFullYear()} {SITE_NAME}</div>
+        <div className="container-page py-4 text-xs text-muted">{fmt(t.footer.rights, { year: new Date().getFullYear() })}</div>
       </div>
     </footer>
   );

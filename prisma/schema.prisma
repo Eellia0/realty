@@ -50,6 +50,8 @@ model SiteSettings {
   email        String? // почта для клиентов
   address      String? // адрес офиса
   workingHours String? // часы работы
+  addressEn      String? // адрес офиса для английской версии
+  workingHoursEn String? // часы работы для английской версии
   legalName    String? // кто обрабатывает данные: имя ИП или название компании (для политики)
   notifyEmail  String? // куда присылать заявки на почту
   updatedAt    DateTime @updatedAt
@@ -107,6 +109,12 @@ model Property {
   // Аэропорты и города считаются автоматически по координатам.
   nearby                 Json?
   videoUrl               String? // ссылка на YouTube, RuTube или VK Видео
+  // Английская версия текстов. Если поле пустое, на английском сайте показывается русский текст.
+  titleEn                String?
+  descriptionEn          String?
+  districtEn             String?
+  addressEn              String?
+  installmentNoteEn      String?
   region         String // GIRNE | ISKELE | ...
   district       String? // посёлок или район
   address        String
@@ -153,6 +161,7 @@ model Lead {
   message    String?
   status     String    @default("NEW") // NEW | IN_PROGRESS | DONE
   source     String    @default("PROPERTY") // PROPERTY — со страницы объекта, CONTACTS — общая заявка
+  locale     String    @default("ru") // язык версии сайта, с которой пришла заявка: ru | en
   consentAt  DateTime? // когда клиент дал согласие на обработку данных
   createdAt  DateTime  @default(now())
   property   Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)

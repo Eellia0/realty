@@ -13,8 +13,9 @@ export function installmentPlan(price: number, downPercent: number, months: numb
   return { down, monthly, months, total, overpay: total - price };
 }
 
-/** «24 месяца», «1 месяц», «5 месяцев». */
-export function monthsLabel(n: number) {
+/** «24 месяца», «1 месяц», «5 месяцев» / «24 months». */
+export function monthsLabel(n: number, locale: "ru" | "en" = "ru") {
+  if (locale === "en") return `${n} ${n === 1 ? "month" : "months"}`;
   const m10 = n % 10, m100 = n % 100;
   if (m10 === 1 && m100 !== 11) return `${n} месяц`;
   if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return `${n} месяца`;

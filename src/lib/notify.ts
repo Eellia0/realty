@@ -27,7 +27,9 @@ export async function notifyNewLead(leadId: number, baseUrl: string | null) {
     : lead.source === "CONTACTS"
       ? "Общая заявка со страницы контактов"
       : "Объект удалён";
-  const propertyUrl = p && baseUrl ? `${baseUrl}${propertyPath(p)}` : null;
+  const lang = lead.locale === "en" ? "en" : "ru";
+  const propertyUrl = p && baseUrl ? `${baseUrl}${propertyPath(p, lang)}` : null;
+  const langLine = lang === "en" ? "Версия сайта: английская, клиенту лучше ответить по-английски" : null;
   const adminUrl = baseUrl ? `${baseUrl}/admin/leads` : null;
 
   const tg = [
@@ -37,6 +39,7 @@ export async function notifyNewLead(leadId: number, baseUrl: string | null) {
     `<b>Телефон:</b> ${escapeTg(lead.phone)}`,
     lead.message ? `<b>Сообщение:</b> ${escapeTg(lead.message)}` : null,
     `<b>Объект:</b> ${escapeTg(propertyLine)}`,
+    langLine ? `🇬🇧 ${langLine}` : null,
     propertyUrl ? `<a href="${propertyUrl}">Открыть объект</a>` : null,
     adminUrl ? `<a href="${adminUrl}">Все заявки в админке</a>` : null,
   ]
@@ -49,6 +52,7 @@ export async function notifyNewLead(leadId: number, baseUrl: string | null) {
     `Телефон: ${lead.phone}`,
     lead.message ? `Сообщение: ${lead.message}` : null,
     `Объект: ${propertyLine}`,
+    langLine,
     propertyUrl ? `Объект на сайте: ${propertyUrl}` : null,
     adminUrl ? `Все заявки: ${adminUrl}` : null,
   ]
@@ -62,6 +66,7 @@ export async function notifyNewLead(leadId: number, baseUrl: string | null) {
       <tr><td style="padding:4px 12px 4px 0;color:#5f6f76">Телефон</td><td><b>${escapeHtml(lead.phone)}</b></td></tr>
       ${lead.message ? `<tr><td style="padding:4px 12px 4px 0;color:#5f6f76;vertical-align:top">Сообщение</td><td>${escapeHtml(lead.message)}</td></tr>` : ""}
       <tr><td style="padding:4px 12px 4px 0;color:#5f6f76;vertical-align:top">Объект</td><td>${escapeHtml(propertyLine)}</td></tr>
+      ${langLine ? `<tr><td style="padding:4px 12px 4px 0;color:#5f6f76">Язык</td><td>${langLine}</td></tr>` : ""}
     </table>`,
     button: adminUrl ? { url: adminUrl, label: "Открыть заявки" } : undefined,
   });

@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toggleFavorite } from "@/actions/favorites";
+import { useI18n } from "@/i18n/client";
 import { HeartIcon } from "./icons";
 
 export function FavoriteButton({
@@ -14,6 +15,7 @@ export function FavoriteButton({
   initial: boolean;
   variant?: "icon" | "full";
 }) {
+  const { t } = useI18n();
   const [fav, setFav] = useState(initial);
   const [pending, startTransition] = useTransition();
   const router = useRouter();
@@ -33,13 +35,13 @@ export function FavoriteButton({
     });
   }
 
-  const label = fav ? "Убрать из избранного" : "Добавить в избранное";
+  const label = fav ? t.card.favoriteRemove : t.card.favoriteAdd;
 
   if (variant === "full") {
     return (
       <button type="button" onClick={onClick} disabled={pending} className="btn btn-secondary w-full" aria-pressed={fav}>
         <HeartIcon filled={fav} className={`h-5 w-5 ${fav ? "text-danger" : ""}`} />
-        {fav ? "В избранном" : "В избранное"}
+        {fav ? t.card.inFavorites : t.card.toFavorites}
       </button>
     );
   }

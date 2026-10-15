@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { MapBounds, MapPoint } from "@/lib/types";
+import { fmt, objectsWord } from "@/i18n/config";
+import { useI18n } from "@/i18n/client";
 import { PropertiesMap } from "./map";
 import { FavoriteButton } from "./FavoriteButton";
 import { ImagePlaceholder, WaveIcon } from "./icons";
@@ -11,13 +13,6 @@ const LIST_LIMIT = 150;
 
 function inBounds(p: MapPoint, [[s, w], [n, e]]: MapBounds) {
   return p.lat >= s && p.lat <= n && p.lng >= w && p.lng <= e;
-}
-
-function plural(n: number) {
-  const m10 = n % 10, m100 = n % 100;
-  if (m10 === 1 && m100 !== 11) return "объект";
-  if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return "объекта";
-  return "объектов";
 }
 
 /* eslint-disable @next/next/no-img-element */
@@ -46,6 +41,7 @@ function CompactCard({ p, isFavorite }: { p: MapPoint; isFavorite: boolean }) {
 
 /** Режим каталога «На карте»: карта почти на всю ширину и колонка объектов из видимой области. */
 export function CatalogMapView({ points, favIds }: { points: MapPoint[]; favIds: number[] }) {
+  const { locale, t } = useI18n();
   const [bounds, setBounds] = useState<MapBounds | null>(null);
   const [hoverId, setHoverId] = useState<number | null>(null);
   const fav = useMemo(() => new Set(favIds), [favIds]);
@@ -59,11 +55,9 @@ export function CatalogMapView({ points, favIds }: { points: MapPoint[]; favIds:
 
       <aside className="flex flex-col lg:h-full lg:w-[25rem] lg:shrink-0">
         <div className="mb-3 flex items-baseline justify-between px-1">
-          <span className="font-bold">
-            {visible.length} {plural(visible.length)} в этой области
-          </span>
+          <span className="font-bold">{fmt(t.catalog.inArea, { n: visible.length, objects: objectsWord(visible.length, locale) })}</span>
           {bounds && visible.length < points.length && (
-            <span className="text-xs text-muted">всего {points.length}</span>
+            <span className="text-xs text-muted">{fmt(t.catalog.total, { n: points.length })}</span>
           )}
         </div>
 
@@ -74,14 +68,10 @@ export function CatalogMapView({ points, favIds }: { points: MapPoint[]; favIds:
                 <CompactCard p={p} isFavorite={fav.has(p.id)} />
               </li>
             ))}
-            {visible.length > LIST_LIMIT && (
-              <li className="py-3 text-center text-sm text-muted">Приблизьте карту, чтобы увидеть остальные объекты.</li>
-            )}
+            {visible.length > LIST_LIMIT && <li className="py-3 text-center text-sm text-muted">{t.catalog.zoomIn}</li>}
           </ul>
         ) : (
-          <div className="card p-6 text-center text-sm text-muted">
-            В этой части карты объектов нет. Отдалите карту или сдвиньте её.
-          </div>
+          <div className="card p-6 text-center text-sm text-muted">{t.catalog.noneHere}</div>
         )}
       </aside>
     </div>

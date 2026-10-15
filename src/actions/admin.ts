@@ -83,6 +83,11 @@ const propertySchema = z.object({
       }),
     )
     .max(12, "Не больше 12 мест рядом"),
+  titleEn: z.string().trim().max(200, "Заголовок по-английски: не больше 200 символов"),
+  descriptionEn: z.string().trim().max(10000),
+  districtEn: z.string().trim().max(100),
+  addressEn: z.string().trim().max(300),
+  installmentNoteEn: z.string().trim().max(300),
   videoUrl: z
     .string()
     .trim()
@@ -102,6 +107,7 @@ const TEXT_FIELDS = [
   "floor", "floorsTotal", "yearBuilt", "completion", "completionDate", "finishing", "furnishing", "titleDeed",
   "seaDistance", "region", "district", "address", "lat", "lng",
   "installmentDownPercent", "installmentMonths", "installmentRate", "installmentNote", "videoUrl",
+  "titleEn", "descriptionEn", "districtEn", "addressEn", "installmentNoteEn",
 ];
 
 function parseJson(v: FormDataEntryValue | null): unknown {
@@ -140,6 +146,12 @@ export async function saveProperty(_prev: SaveState, fd: FormData): Promise<Save
     installmentNote: d.installment ? d.installmentNote || null : null,
     nearby: nearby.length ? nearby : Prisma.DbNull,
     videoUrl: d.videoUrl || null,
+    // Английские тексты необязательны: пустое поле хранится как null.
+    titleEn: d.titleEn || null,
+    descriptionEn: d.descriptionEn || null,
+    districtEn: d.districtEn || null,
+    addressEn: d.addressEn || null,
+    installmentNoteEn: d.installment ? d.installmentNoteEn || null : null,
     district: d.district || null,
     completionDate: d.completion === "READY" ? null : d.completionDate || null,
     plotArea: d.plotArea ?? null,

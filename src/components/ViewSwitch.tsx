@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { filtersToQuery, type CatalogFilters } from "@/lib/properties";
+import { getI18n } from "@/i18n/server";
 
 function ListIcon() {
   return (
@@ -22,12 +23,13 @@ function MapIcon() {
 }
 
 /** Переключатель «Списком / На карте». Фильтры при переключении сохраняются. */
-export function ViewSwitch({ f }: { f: CatalogFilters }) {
+export async function ViewSwitch({ f }: { f: CatalogFilters }) {
+  const { t, lp } = await getI18n();
   const item = (view: "list" | "map", label: string, icon: React.ReactNode) => {
     const active = f.view === view;
     return (
       <Link
-        href={`/catalog${filtersToQuery(f, { view, page: 1 })}`}
+        href={lp(`/catalog${filtersToQuery(f, { view, page: 1 })}`)}
         aria-current={active ? "page" : undefined}
         className={`flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-sm font-semibold transition ${
           active ? "bg-accent text-white shadow-sm" : "text-muted hover:text-ink"
@@ -40,8 +42,8 @@ export function ViewSwitch({ f }: { f: CatalogFilters }) {
   };
   return (
     <div className="inline-flex rounded-xl bg-surface p-1 shadow-soft ring-1 ring-line">
-      {item("list", "Списком", <ListIcon />)}
-      {item("map", "На карте", <MapIcon />)}
+      {item("list", t.catalog.viewList, <ListIcon />)}
+      {item("map", t.catalog.viewMap, <MapIcon />)}
     </div>
   );
 }

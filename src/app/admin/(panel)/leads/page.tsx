@@ -41,7 +41,10 @@ export default async function AdminLeadsPage() {
                     )}
                   </td>
                   <td className="p-4">
-                    <div className="font-medium">{l.name}</div>
+                    <div className="flex items-center gap-1.5 font-medium">
+                      {l.name}
+                      {l.locale === "en" && <span className="badge bg-sea-soft text-sea" title="Заявка с английской версии сайта">EN</span>}
+                    </div>
                     <a href={`tel:${l.phone.replace(/[^\d+]/g, "")}`} className="text-accent-dark hover:underline">{l.phone}</a>
                   </td>
                   <td className="max-w-xs p-4 text-muted">{l.message || "—"}</td>

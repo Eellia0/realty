@@ -1,0 +1,62 @@
+{
+  "Пентхаус 2+1 с террасой на крыше в Long Beach": {
+    "titleEn": "2-bedroom penthouse with roof terrace in Long Beach",
+    "descriptionEn": "A penthouse in a complex with pools and a spa, 250 metres from a sandy beach. Private roof terrace with a jacuzzi and sea views. Sold furnished and with appliances.",
+    "districtEn": "Long Beach",
+    "addressEn": "Long Beach seafront complex"
+  },
+  "Апартаменты 1+1 у моря в Алсанджаке": {
+    "titleEn": "1-bedroom apartment near the sea in Alsancak",
+    "descriptionEn": "A bright apartment with a balcony and views of the sea and mountains. Restaurants, supermarkets and the seafront promenade are close by. A good choice to live in or to rent out.",
+    "districtEn": "Alsancak",
+    "addressEn": "Alsancak, near the coastal road"
+  },
+  "Вилла 4+1 с частным бассейном в Чаталкёе": {
+    "titleEn": "4-bedroom villa with private pool in Çatalköy",
+    "descriptionEn": "A modern villa with panoramic glazing, a private pool and a landscaped garden. Underfloor heating and a designer renovation. Ten minutes from Kyrenia.",
+    "districtEn": "Çatalköy",
+    "addressEn": "Çatalköy, quiet street at the foot of the mountains"
+  },
+  "Таунхаус 3+1 в закрытом комплексе в Эсентепе": {
+    "titleEn": "3-bedroom townhouse in a gated complex in Esentepe",
+    "descriptionEn": "A two-storey townhouse with its own garden. The complex has a pool, security and access to a cove. A golf course is nearby.",
+    "districtEn": "Esentepe",
+    "addressEn": "Esentepe, complex with sea access"
+  },
+  "Апартаменты с садом 2+1 в Лапте": {
+    "titleEn": "2-bedroom garden apartment in Lapta",
+    "descriptionEn": "A ground-floor apartment with a private garden and direct access to the communal pool. Freshly renovated, in a quiet area with mountain views.",
+    "districtEn": "Lapta",
+    "addressEn": "Lapta, residential area near the mountains"
+  },
+  "Бунгало 2+1 у пляжа в Татлысу": {
+    "titleEn": "2-bedroom bungalow by the beach in Tatlısu",
+    "descriptionEn": "A single-storey house 150 metres from the sea. A terrace with water views, a small garden and parking. A peaceful spot away from the tourist streets.",
+    "districtEn": "Tatlısu",
+    "addressEn": "Tatlısu, beachfront"
+  },
+  "Новостройка: лофт 1+1 в Фамагусте": {
+    "titleEn": "New build: 1-bedroom loft in Famagusta",
+    "descriptionEn": "A loft with high ceilings in a complex under construction. Developer payment plan until completion. The university and the old town are nearby.",
+    "districtEn": "Gazimağusa",
+    "addressEn": "Gazimağusa, new district near the university"
+  },
+  "Участок под виллу с видом на море в Багчели": {
+    "titleEn": "Building plot with sea views in Bahçeli",
+    "descriptionEn": "A level plot with planning permission for a villa. Electricity and water at the boundary. Panoramic views of the sea and mountains.",
+    "districtEn": "Bahçeli",
+    "addressEn": "Bahçeli, hillside overlooking the coast"
+  },
+  "Студия на этапе котлована в Боазе": {
+    "titleEn": "Off-plan studio in Boğaz",
+    "descriptionEn": "A studio in a resort complex project. Launch price with an interest-free payment plan. A five-minute walk to the Boğaz seafront.",
+    "districtEn": "Boğaz",
+    "addressEn": "Boğaz, seafront development"
+  },
+  "Офис в центре Никосии": {
+    "titleEn": "Office in central Nicosia",
+    "descriptionEn": "A renovated office in the business district. Suitable for a representative office, a clinic or a studio.",
+    "districtEn": "Köşklüçiftlik",
+    "addressEn": "Nicosia business district"
+  }
+}

@@ -27,15 +27,8 @@ export function keyPlaceDistances(lat: number, lng: number) {
   );
 }
 
-const nf = new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 });
-const nf1 = new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 1 });
-
-/** 350 → «350 м», 1250 → «1,3 км», 28400 → «28 км». */
-export function formatDistance(m: number) {
-  if (m < 1000) return `${nf.format(Math.round(m / 10) * 10)} м`;
-  if (m < 10000) return `${nf1.format(m / 1000)} км`;
-  return `${nf.format(m / 1000)} км`;
-}
+// Форматирование расстояний с учётом языка живёт в format.ts.
+export { formatDistance } from "./format";
 
 export type NearbyPlace = { name: string; distance: number };
 

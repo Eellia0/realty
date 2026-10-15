@@ -1,8 +1,6 @@
-import { SITE_NAME } from "@/lib/site";
-
 /** Логотип для картинок-превью: квадрат с домиком и название сайта. */
-export function OgBrand({ color = "#ffffff", tile = "rgba(255,255,255,0.18)", iconColor = "#ffffff" }: {
-  color?: string; tile?: string; iconColor?: string;
+export function OgBrand({ name, color = "#ffffff", tile = "rgba(255,255,255,0.18)", iconColor = "#ffffff" }: {
+  name: string; color?: string; tile?: string; iconColor?: string;
 }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 16, color, fontSize: 30, fontWeight: 800 }}>
@@ -11,7 +9,7 @@ export function OgBrand({ color = "#ffffff", tile = "rgba(255,255,255,0.18)", ic
           <path strokeLinejoin="round" d="M3.5 10.5 12 4l8.5 6.5V20a1 1 0 0 1-1 1h-5v-6h-5v6h-5a1 1 0 0 1-1-1v-9.5Z" />
         </svg>
       </div>
-      {SITE_NAME}
+      {name}
     </div>
   );
 }

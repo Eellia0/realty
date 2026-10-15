@@ -3,9 +3,12 @@
 import { useState } from "react";
 import { ChevronIcon, ImagePlaceholder } from "./icons";
 import { thumbUrl } from "@/lib/images";
+import { fmt } from "@/i18n/config";
+import { useI18n } from "@/i18n/client";
 
 /* eslint-disable @next/next/no-img-element */
 export function Gallery({ images, title }: { images: string[]; title: string }) {
+  const { t } = useI18n();
   const [index, setIndex] = useState(0);
 
   if (!images.length) {
@@ -21,14 +24,14 @@ export function Gallery({ images, title }: { images: string[]; title: string }) 
   return (
     <div className="space-y-3">
       <div className="relative aspect-[16/10] overflow-hidden rounded-2xl bg-warm">
-        <img src={images[index]} alt={`${title}, фото ${index + 1}`} className="h-full w-full object-cover" />
+        <img src={images[index]} alt={fmt(t.gallery.photoAlt, { title, n: index + 1 })} className="h-full w-full object-cover" />
         {images.length > 1 && (
           <>
-            <button type="button" onClick={() => go(-1)} aria-label="Предыдущее фото"
+            <button type="button" onClick={() => go(-1)} aria-label={t.gallery.prev}
               className="absolute top-1/2 left-3 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 shadow-soft hover:bg-white">
               <ChevronIcon dir="left" className="h-5 w-5" />
             </button>
-            <button type="button" onClick={() => go(1)} aria-label="Следующее фото"
+            <button type="button" onClick={() => go(1)} aria-label={t.gallery.next}
               className="absolute top-1/2 right-3 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 shadow-soft hover:bg-white">
               <ChevronIcon className="h-5 w-5" />
             </button>
