@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { formatPrice } from "@/lib/format";
 import type { MapBounds, MapPoint } from "@/lib/types";
 import { PropertiesMap } from "./map";
 import { FavoriteButton } from "./FavoriteButton";
@@ -29,7 +28,7 @@ function CompactCard({ p, isFavorite }: { p: MapPoint; isFavorite: boolean }) {
         {p.cover ? <img src={p.cover} alt="" loading="lazy" className="h-full w-full object-cover" /> : <ImagePlaceholder className="[&_svg]:h-8 [&_svg]:w-8" />}
       </Link>
       <Link href={p.href} className="min-w-0 flex-1 space-y-0.5 pr-8">
-        <div className="font-extrabold text-accent-dark">{formatPrice(p.price, p.dealType)}</div>
+        <div className="font-extrabold text-accent-dark">{p.priceText}</div>
         <div className="truncate text-xs text-muted">{p.typeLabel} · {p.meta}</div>
         <div className="line-clamp-2 text-sm leading-snug font-semibold">{p.title}</div>
         {p.sea && (

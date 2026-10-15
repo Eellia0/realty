@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { formatPrice, formatPriceShort } from "@/lib/format";
 import { MAP_CENTER, MAP_ZOOM } from "@/lib/site";
 import type { MapBounds, MapPoint } from "@/lib/types";
 import { addControls, escapeHtml, getLayouts, loadYmaps, priceMarkerOptions, type YMaps } from "./ymaps";
@@ -22,7 +21,7 @@ function balloonHtml(p: MapPoint) {
         <div class="ym-card__place">${escapeHtml(p.place)}</div>
       </div>
       <div class="ym-card__body">
-        <div class="ym-card__price">${escapeHtml(formatPrice(p.price, p.dealType))}</div>
+        <div class="ym-card__price">${escapeHtml(p.priceText)}</div>
         <div class="ym-card__title">${escapeHtml(p.title)}</div>
         <div class="ym-card__meta">${escapeHtml(p.meta)}</div>
         ${chips ? `<div class="ym-card__chips">${chips}</div>` : ""}
@@ -123,7 +122,7 @@ export default function PropertiesMap({ points, zoom = 15, onBoundsChange, highl
           type: "Feature",
           id: p.id,
           geometry: { type: "Point", coordinates: [p.lat, p.lng] },
-          properties: { iconContent: formatPriceShort(p.price), hintContent: p.title, balloonHtml: balloonHtml(p) },
+          properties: { iconContent: p.priceShort, hintContent: p.title, balloonHtml: balloonHtml(p) },
         })),
       });
       onBoundsRef.current?.(map.getBounds());

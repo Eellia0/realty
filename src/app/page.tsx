@@ -4,13 +4,13 @@ import { db } from "@/lib/db";
 import { BEDROOM_OPTIONS, CATALOG_STATUSES, PROPERTY_TYPES, SEA_DISTANCE_OPTIONS } from "@/lib/constants";
 import { getFavoriteIds } from "@/lib/favorites";
 import { toMapPoint, withCover } from "@/lib/properties";
-import { CURRENCY } from "@/lib/site";
 import { PropertyCard } from "@/components/PropertyCard";
 import { PropertiesMap } from "@/components/map";
 import { headers } from "next/headers";
 import { getSettings } from "@/lib/settings";
 import { siteUrl } from "@/lib/site-url";
 import { SITE_DESCRIPTION, SITE_NAME } from "@/lib/site";
+import { getMoney } from "@/lib/currency";
 
 const QUICK_LINKS = [
   { href: "/catalog?sea=200", label: "Первая линия" },
@@ -29,6 +29,7 @@ export default async function HomePage() {
     db.property.count({ where }),
   ]);
   const fav = new Set(favIds);
+  const money = await getMoney();
 
   // Сведения об агентстве для поисковиков (schema.org). Пустые контакты не попадают.
   const [settings, base, nonce] = await Promise.all([getSettings(), siteUrl(), headers().then((h) => h.get("x-nonce") ?? undefined)]);
@@ -79,7 +80,8 @@ export default async function HomePage() {
                 <option value="">До моря: неважно</option>
                 {SEA_DISTANCE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
-              <input name="priceMax" inputMode="numeric" placeholder={`Цена до, ${CURRENCY.symbol}`} className="input border-0 bg-bg" />
+              <input name="priceMax" inputMode="numeric" placeholder={`Цена до, ${money.symbol}`} className="input border-0 bg-bg" />
+              <input type="hidden" name="cur" value={money.code} />
               <button className="btn btn-primary px-6">Найти</button>
             </Form>
 
@@ -114,7 +116,7 @@ export default async function HomePage() {
         <section className="container-page py-8">
           <h2 className="mb-6 text-2xl font-bold">Объекты на карте</h2>
           <div className="card h-[28rem] overflow-hidden">
-            <PropertiesMap points={all.map(toMapPoint)} />
+            <PropertiesMap points={all.map((p) => toMapPoint(p, money))} />
           </div>
         </section>
       )}

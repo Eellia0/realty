@@ -14,7 +14,7 @@ import {
   labelOf,
 } from "@/lib/constants";
 import {
-  bedroomsLabel, formatArea, formatPrice, localFloor, pricePerMeter, propertyMeta, seaDistanceLabel,
+  bedroomsLabel, formatArea, formatPrice, localFloor, propertyMeta, seaDistanceLabel,
 } from "@/lib/format";
 import { toMapPoint, withCover } from "@/lib/properties";
 import { Gallery } from "@/components/Gallery";
@@ -31,6 +31,8 @@ import { PlansGallery } from "@/components/property/PlansGallery";
 import { installmentPlan } from "@/lib/installment";
 import { parseNearby } from "@/lib/places";
 import { videoEmbed } from "@/lib/video";
+import { getMoney } from "@/lib/currency";
+import { CURRENCY_CODES, createMoney, rateDateLabel } from "@/lib/money";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -82,6 +84,7 @@ export default async function PropertyPage({ params }: Props) {
   // Старые и устаревшие адреса (/property/12, прежнее название) ведут на актуальный.
   const path = propertyPath(p);
   if (`/property/${param}` !== path) permanentRedirect(path);
+  const money = await getMoney();
 
   const [favIds, similar] = await Promise.all([
     getFavoriteIds(),
@@ -118,7 +121,7 @@ export default async function PropertyPage({ params }: Props) {
     ["Мебель", p.furnishing ? labelOf(FURNISHING, p.furnishing) : null],
     ["Тип титула", p.titleDeed ? labelOf(TITLE_DEEDS, p.titleDeed) : null],
     ["Год постройки", p.yearBuilt ? String(p.yearBuilt) : null],
-    ["Цена за м²", p.propertyType !== "LAND" ? pricePerMeter(p.price, p.area) : null],
+    ["Цена за м²", p.propertyType !== "LAND" ? money.perMeter(p.price, p.area) : null],
   ];
   const sea = seaDistanceLabel(p.seaDistance);
   const photos = p.images.filter((i) => i.kind === "PHOTO").map((i) => i.url);
@@ -222,7 +225,7 @@ export default async function PropertyPage({ params }: Props) {
 
           {hasInstallment && (
             <InstallmentBlock price={p.price} down={p.installmentDownPercent!} months={p.installmentMonths!}
-              rate={p.installmentRate} note={p.installmentNote} />
+              rate={p.installmentRate} note={p.installmentNote} money={money} />
           )}
 
           {plans.length > 0 && <PlansGallery plans={plans} title={p.title} />}
@@ -234,7 +237,7 @@ export default async function PropertyPage({ params }: Props) {
           <section>
             <h2 className="mb-3 text-xl font-bold">На карте</h2>
             <div className="card h-80 overflow-hidden">
-              <PropertiesMap points={[toMapPoint({ ...p, images: p.images.filter((i) => i.kind === "PHOTO").slice(0, 1) })]} zoom={15} />
+              <PropertiesMap points={[toMapPoint({ ...p, images: p.images.filter((i) => i.kind === "PHOTO").slice(0, 1) }, money)]} zoom={15} />
             </div>
           </section>
         </div>
@@ -242,11 +245,19 @@ export default async function PropertyPage({ params }: Props) {
         <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
           <div className="card space-y-4 p-5">
             <div>
-              <div className="text-3xl font-extrabold text-accent-dark">{formatPrice(p.price, p.dealType)}</div>
-              {p.propertyType !== "LAND" && <div className="text-sm text-muted">{pricePerMeter(p.price, p.area)}</div>}
+              <div className="text-3xl font-extrabold text-accent-dark">{money.format(p.price, p.dealType)}</div>
+              {p.propertyType !== "LAND" && <div className="text-sm text-muted">{money.perMeter(p.price, p.area)}</div>}
+              {money.rates && (
+                <div className="mt-3 space-y-0.5 border-t border-line pt-3 text-sm text-muted">
+                  {CURRENCY_CODES.filter((c) => c !== money.code).map((c) => (
+                    <div key={c}>{createMoney(c, money.rates).format(p.price, p.dealType)}</div>
+                  ))}
+                  <div className="text-xs">Цена в фунтах точная, в других валютах — по курсу ЦБ РФ на {rateDateLabel(money.rates.date)}</div>
+                </div>
+              )}
               {monthly != null && (
                 <div className="mt-2 inline-flex rounded-lg bg-sun-soft px-2.5 py-1 text-sm font-semibold text-[#7a5210]">
-                  Рассрочка от {formatPrice(monthly)} в месяц
+                  Рассрочка от {money.format(monthly)} в месяц
                 </div>
               )}
             </div>

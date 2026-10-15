@@ -159,3 +159,14 @@ model Lead {
 
   @@index([status, createdAt])
 }
+
+/// Последние известные курсы валют (ЦБ РФ). Нужны, если источник курсов временно недоступен.
+/// Всегда одна строка с id = 1. Курсы — сколько единиц валюты за 1 фунт.
+model CurrencyRates {
+  id        Int      @id @default(1)
+  eurPerGbp Float
+  rubPerGbp Float
+  rateDate  String // дата курса ЦБ, например 2026-10-15
+  source    String
+  fetchedAt DateTime @updatedAt
+}

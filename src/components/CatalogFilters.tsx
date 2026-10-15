@@ -4,8 +4,8 @@ import {
   BEDROOM_OPTIONS, COMPLETION, FEATURES, FINISHING, FURNISHING, PROPERTY_TYPES, REGIONS, SEA_DISTANCE_OPTIONS,
   TITLE_DEEDS,
 } from "@/lib/constants";
-import { CURRENCY } from "@/lib/site";
-import { SORT_OPTIONS, extraFilterCount, type CatalogFilters as Filters } from "@/lib/properties";
+import type { Money } from "@/lib/money";
+import { SORT_OPTIONS, extraFilterCount, filterPriceToGbp, type CatalogFilters as Filters } from "@/lib/properties";
 
 function Select({ id, name, label, value, options, any = "Любой" }: {
   id: string; name: string; label: string; value?: string; options: [string, string][]; any?: string;
@@ -21,23 +21,31 @@ function Select({ id, name, label, value, options, any = "Любой" }: {
   );
 }
 
-export function CatalogFilters({ f }: { f: Filters }) {
+export function CatalogFilters({ f, money }: { f: Filters; money: Money }) {
   const extra = extraFilterCount(f);
+  // Цены в фильтре показываются в текущей валюте посетителя, даже если ссылку открыли с другой валютой.
+  const shownPrice = (v?: number) => {
+    if (v == null) return "";
+    if (f.cur === money.code) return String(v);
+    const gbp = filterPriceToGbp(v, f, money.rates);
+    return gbp == null ? "" : String(Math.round(money.convert(gbp)));
+  };
   return (
-    // key сбрасывает поля, когда фильтры меняются через ссылку «Сбросить»
-    <Form key={JSON.stringify(f)} action="/catalog" className="card p-4">
+    // key перерисовывает поля, когда фильтры меняются через ссылку «Сбросить» или меняется валюта
+    <Form key={`${JSON.stringify(f)}|${money.code}`} action="/catalog" className="card p-4">
       {f.deal !== "SALE" && <input type="hidden" name="deal" value={f.deal} />}
       {f.view === "map" && <input type="hidden" name="view" value="map" />}
+      <input type="hidden" name="cur" value={money.code} />
 
       <div className="grid items-end gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_0.8fr_1.5fr_1.1fr_1fr_auto]">
         <Select id="f-type" name="type" label="Тип" value={f.type} options={Object.entries(PROPERTY_TYPES)} />
         <Select id="f-bedrooms" name="bedrooms" label="Спальни" value={f.bedrooms} any="Любое"
           options={BEDROOM_OPTIONS.map((o) => [o.value, o.label])} />
         <div>
-          <span className="label">Цена, {CURRENCY.symbol}</span>
+          <span className="label">Цена, {money.symbol}</span>
           <div className="flex gap-2">
-            <input name="priceMin" inputMode="numeric" defaultValue={f.priceMin ?? ""} placeholder="от" className="input" aria-label="Цена от" />
-            <input name="priceMax" inputMode="numeric" defaultValue={f.priceMax ?? ""} placeholder="до" className="input" aria-label="Цена до" />
+            <input name="priceMin" inputMode="numeric" defaultValue={shownPrice(f.priceMin)} placeholder="от" className="input" aria-label="Цена от" />
+            <input name="priceMax" inputMode="numeric" defaultValue={shownPrice(f.priceMax)} placeholder="до" className="input" aria-label="Цена до" />
           </div>
         </div>
         <Select id="f-sea" name="sea" label="До моря" value={f.sea} any="Неважно"

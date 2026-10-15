@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { formatPrice, propertyMeta, seaDistanceLabel } from "@/lib/format";
+import { propertyMeta, seaDistanceLabel } from "@/lib/format";
+import { getMoney } from "@/lib/currency";
 import { COMPLETION, PROPERTY_TYPES, REGIONS, labelOf } from "@/lib/constants";
 import type { PropertyWithCover } from "@/lib/properties";
 import { FavoriteButton } from "./FavoriteButton";
@@ -8,7 +9,8 @@ import { StatusBadge } from "./StatusBadge";
 import { thumbUrl } from "@/lib/images";
 import { propertyPath } from "@/lib/slug";
 
-export function PropertyCard({ p, isFavorite }: { p: PropertyWithCover; isFavorite: boolean }) {
+export async function PropertyCard({ p, isFavorite }: { p: PropertyWithCover; isFavorite: boolean }) {
+  const money = await getMoney();
   const cover = p.images[0] ? thumbUrl(p.images[0].url) : null;
   const sea = seaDistanceLabel(p.seaDistance);
   return (
@@ -26,7 +28,7 @@ export function PropertyCard({ p, isFavorite }: { p: PropertyWithCover; isFavori
           </span>
         </div>
         <div className="space-y-2 p-4">
-          <div className="text-xl font-extrabold text-accent-dark">{formatPrice(p.price, p.dealType)}</div>
+          <div className="text-xl font-extrabold text-accent-dark">{money.format(p.price, p.dealType)}</div>
           <div className="text-sm text-muted">{propertyMeta(p)}</div>
           <h3 className="line-clamp-1 font-semibold">{p.title}</h3>
           <div className="flex items-center gap-1 text-sm text-muted">

@@ -6,6 +6,7 @@ import { CatalogMapView } from "@/components/CatalogMapView";
 import { PropertyCard } from "@/components/PropertyCard";
 import { Pagination } from "@/components/Pagination";
 import { ViewSwitch } from "@/components/ViewSwitch";
+import { getMoney } from "@/lib/currency";
 
 export const metadata: Metadata = {
   title: "Каталог недвижимости",
@@ -25,11 +26,11 @@ type Props = { searchParams: Promise<Record<string, string | string[] | undefine
 
 export default async function CatalogPage({ searchParams }: Props) {
   const f = parseFilters(await searchParams);
-  const favIds = await getFavoriteIds();
+  const [favIds, money] = await Promise.all([getFavoriteIds(), getMoney()]);
   const isMap = f.view === "map";
 
-  const list = isMap ? null : await getCatalogPage(f);
-  const points = isMap ? await getCatalogPoints(f) : null;
+  const list = isMap ? null : await getCatalogPage(f, money.rates);
+  const points = isMap ? await getCatalogPoints(f, money) : null;
   const total = list?.total ?? points?.length ?? 0;
   const fav = new Set(favIds);
 
@@ -46,7 +47,7 @@ export default async function CatalogPage({ searchParams }: Props) {
         <ViewSwitch f={f} />
       </div>
 
-      <CatalogFilters f={f} />
+      <CatalogFilters f={f} money={money} />
 
       <div className="mt-6">
         {points && <CatalogMapView points={points} favIds={favIds} />}

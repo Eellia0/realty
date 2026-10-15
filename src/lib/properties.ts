@@ -9,6 +9,7 @@ import { propertyMeta, seaDistanceLabel } from "./format";
 import type { MapPoint } from "./types";
 import { thumbUrl } from "./images";
 import { propertyPath } from "./slug";
+import { BASE_CURRENCY, isCurrency, toGbp, type CurrencyCode, type Money, type Rates } from "./money";
 
 export const PAGE_SIZE = 12;
 
@@ -21,6 +22,8 @@ export type CatalogFilters = {
   bedrooms?: string;
   priceMin?: number;
   priceMax?: number;
+  /** В какой валюте указаны priceMin и priceMax (как видел их посетитель). */
+  cur: CurrencyCode;
   areaMin?: number;
   areaMax?: number;
   sea?: string; // максимальное расстояние до моря, м
@@ -71,6 +74,7 @@ export function parseFilters(sp: SearchParams): CatalogFilters {
     bedrooms: bedrooms && ["0", "1", "2", "3", "4"].includes(bedrooms) ? bedrooms : undefined,
     priceMin: num(sp.priceMin),
     priceMax: num(sp.priceMax),
+    cur: isCurrency(first(sp.cur)) ? (first(sp.cur) as CurrencyCode) : BASE_CURRENCY,
     areaMin: num(sp.areaMin),
     areaMax: num(sp.areaMax),
     sea: SEA_DISTANCE_OPTIONS.some((o) => o.value === sea) ? sea : undefined,
@@ -94,11 +98,19 @@ export function extraFilterCount(f: CatalogFilters) {
   ).length + f.feat.length;
 }
 
-function buildWhere(f: CatalogFilters): Prisma.PropertyWhereInput {
+/** Цена из фильтра в фунтах. Если курсов нет, считаем, что она уже в фунтах. */
+export function filterPriceToGbp(v: number | undefined, f: CatalogFilters, rates: Rates | null) {
+  if (v == null) return undefined;
+  return f.cur === BASE_CURRENCY || !rates ? v : toGbp(v, f.cur, rates);
+}
+
+function buildWhere(f: CatalogFilters, rates: Rates | null): Prisma.PropertyWhereInput {
   const where: Prisma.PropertyWhereInput = { status: { in: CATALOG_STATUSES }, dealType: f.deal };
   if (f.type) where.propertyType = f.type;
   if (f.bedrooms) where.bedrooms = f.bedrooms === "4" ? { gte: 4 } : Number(f.bedrooms);
-  if (f.priceMin != null || f.priceMax != null) where.price = { gte: f.priceMin, lte: f.priceMax };
+  if (f.priceMin != null || f.priceMax != null) {
+    where.price = { gte: filterPriceToGbp(f.priceMin, f, rates), lte: filterPriceToGbp(f.priceMax, f, rates) };
+  }
   if (f.areaMin != null || f.areaMax != null) where.area = { gte: f.areaMin, lte: f.areaMax };
   if (f.sea) where.seaDistance = { lte: Number(f.sea) };
   if (f.seaView) where.seaView = true;
@@ -127,12 +139,15 @@ export const withCover = {
 
 export type PropertyWithCover = Prisma.PropertyGetPayload<{ include: typeof withCover }>;
 
-export function toMapPoint(p: PropertyWithCover): MapPoint {
+/** Данные метки на карте. Цена уже переведена в валюту посетителя. */
+export function toMapPoint(p: PropertyWithCover, money: Money): MapPoint {
   return {
     id: p.id,
     lat: p.lat,
     lng: p.lng,
     price: p.price,
+    priceText: money.format(p.price, p.dealType),
+    priceShort: money.formatShort(p.price),
     dealType: p.dealType,
     title: p.title,
     address: p.address,
@@ -149,8 +164,8 @@ export function toMapPoint(p: PropertyWithCover): MapPoint {
 }
 
 /** Страница списка с пагинацией. */
-export async function getCatalogPage(f: CatalogFilters) {
-  const where = buildWhere(f);
+export async function getCatalogPage(f: CatalogFilters, rates: Rates | null) {
+  const where = buildWhere(f, rates);
   const [items, total] = await Promise.all([
     db.property.findMany({
       where,
@@ -165,13 +180,13 @@ export async function getCatalogPage(f: CatalogFilters) {
 }
 
 /** Все подходящие объекты для режима карты: их сотни, это нормальный объём. */
-export async function getCatalogPoints(f: CatalogFilters) {
+export async function getCatalogPoints(f: CatalogFilters, money: Money) {
   const items = await db.property.findMany({
-    where: buildWhere(f),
+    where: buildWhere(f, money.rates),
     orderBy: [ORDER[f.sort], { id: "desc" }],
     include: withCover,
   });
-  return items.map(toMapPoint);
+  return items.map((p) => toMapPoint(p, money));
 }
 
 /** Строит query string из фильтров, пропуская значения по умолчанию. */
@@ -184,6 +199,7 @@ export function filtersToQuery(f: CatalogFilters, overrides: Partial<Record<keyo
     if (k === "view" && v === "list") continue;
     if (k === "sort" && v === "new") continue;
     if (k === "page" && Number(v) === 1) continue;
+    if (k === "cur" && (v === BASE_CURRENCY || (merged.priceMin == null && merged.priceMax == null))) continue;
     if (Array.isArray(v)) v.forEach((x) => params.append(k, String(x)));
     else params.set(k, v === true ? "1" : String(v));
   }

@@ -1,4 +1,4 @@
-import { formatPrice } from "@/lib/format";
+import type { Money } from "@/lib/money";
 import { installmentPlan, monthsLabel } from "@/lib/installment";
 import { formatDistance, keyPlaceDistances, type NearbyPlace } from "@/lib/places";
 import type { VideoEmbed } from "@/lib/video";
@@ -6,8 +6,8 @@ import { BuildingIcon, PinIcon, PlaneIcon, WaveIcon } from "../icons";
 
 // Блоки страницы объекта. Каждый показывается, только если в объекте есть данные.
 
-export function InstallmentBlock({ price, down, months, rate, note }: {
-  price: number; down: number; months: number; rate: number | null; note: string | null;
+export function InstallmentBlock({ price, down, months, rate, note, money }: {
+  price: number; down: number; months: number; rate: number | null; note: string | null; money: Money;
 }) {
   const plan = installmentPlan(price, down, months, rate);
   if (!plan) return null;
@@ -20,11 +20,11 @@ export function InstallmentBlock({ price, down, months, rate, note }: {
       <div className="grid gap-4 bg-surface p-5 sm:grid-cols-3">
         <div>
           <div className="text-sm text-muted">Первый взнос, {down}%</div>
-          <div className="mt-1 text-xl font-extrabold">{formatPrice(plan.down)}</div>
+          <div className="mt-1 text-xl font-extrabold">{money.format(plan.down)}</div>
         </div>
         <div>
           <div className="text-sm text-muted">Платёж в месяц</div>
-          <div className="mt-1 text-xl font-extrabold text-accent-dark">{formatPrice(plan.monthly)}</div>
+          <div className="mt-1 text-xl font-extrabold text-accent-dark">{money.format(plan.monthly)}</div>
         </div>
         <div>
           <div className="text-sm text-muted">Срок</div>
@@ -34,7 +34,7 @@ export function InstallmentBlock({ price, down, months, rate, note }: {
           <p className="text-sm text-muted sm:col-span-3">
             {note}
             {note && plan.overpay > 1 ? " " : ""}
-            {plan.overpay > 1 ? `Переплата за весь срок ${formatPrice(plan.overpay)}, итого ${formatPrice(plan.total)}.` : ""}
+            {plan.overpay > 1 ? `Переплата за весь срок ${money.format(plan.overpay)}, итого ${money.format(plan.total)}.` : ""}
           </p>
         )}
       </div>

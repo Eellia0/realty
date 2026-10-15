@@ -3,6 +3,10 @@ export type MapPoint = {
   lat: number;
   lng: number;
   price: number;
+  /** Цена в валюте посетителя, готовая к показу: «≈ €223 800». */
+  priceText: string;
+  /** Короткая цена для метки на карте: «€224K». */
+  priceShort: string;
   dealType: string;
   title: string;
   address: string;
