@@ -25,10 +25,10 @@ function plural(n: number) {
 function CompactCard({ p, isFavorite }: { p: MapPoint; isFavorite: boolean }) {
   return (
     <div className="relative flex gap-3 rounded-2xl bg-surface p-2.5 ring-1 ring-line transition hover:shadow-soft hover:ring-accent/40">
-      <Link href={`/property/${p.id}`} className="h-24 w-28 shrink-0 overflow-hidden rounded-xl">
+      <Link href={p.href} className="h-24 w-28 shrink-0 overflow-hidden rounded-xl">
         {p.cover ? <img src={p.cover} alt="" loading="lazy" className="h-full w-full object-cover" /> : <ImagePlaceholder className="[&_svg]:h-8 [&_svg]:w-8" />}
       </Link>
-      <Link href={`/property/${p.id}`} className="min-w-0 flex-1 space-y-0.5 pr-8">
+      <Link href={p.href} className="min-w-0 flex-1 space-y-0.5 pr-8">
         <div className="font-extrabold text-accent-dark">{formatPrice(p.price, p.dealType)}</div>
         <div className="truncate text-xs text-muted">{p.typeLabel} · {p.meta}</div>
         <div className="line-clamp-2 text-sm leading-snug font-semibold">{p.title}</div>

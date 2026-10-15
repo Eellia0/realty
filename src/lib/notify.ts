@@ -5,6 +5,7 @@ import { escapeHtml, mailLayout, sendMail } from "./mailer";
 import { getSettings } from "./settings";
 import { escapeTg, sendTelegram } from "./telegram";
 import { CURRENCY } from "./site";
+import { propertyPath } from "./slug";
 
 const nf = new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 });
 
@@ -26,7 +27,7 @@ export async function notifyNewLead(leadId: number, baseUrl: string | null) {
     : lead.source === "CONTACTS"
       ? "Общая заявка со страницы контактов"
       : "Объект удалён";
-  const propertyUrl = p && baseUrl ? `${baseUrl}/property/${p.id}` : null;
+  const propertyUrl = p && baseUrl ? `${baseUrl}${propertyPath(p)}` : null;
   const adminUrl = baseUrl ? `${baseUrl}/admin/leads` : null;
 
   const tg = [

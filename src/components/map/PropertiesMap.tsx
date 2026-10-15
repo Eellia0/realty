@@ -26,7 +26,7 @@ function balloonHtml(p: MapPoint) {
         <div class="ym-card__title">${escapeHtml(p.title)}</div>
         <div class="ym-card__meta">${escapeHtml(p.meta)}</div>
         ${chips ? `<div class="ym-card__chips">${chips}</div>` : ""}
-        <a class="ym-card__btn" href="/property/${p.id}">Подробнее →</a>
+        <a class="ym-card__btn" href="${escapeHtml(p.href)}">Подробнее →</a>
       </div>
     </div>`;
 }

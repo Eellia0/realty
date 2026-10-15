@@ -7,6 +7,10 @@ import { toMapPoint, withCover } from "@/lib/properties";
 import { CURRENCY } from "@/lib/site";
 import { PropertyCard } from "@/components/PropertyCard";
 import { PropertiesMap } from "@/components/map";
+import { headers } from "next/headers";
+import { getSettings } from "@/lib/settings";
+import { siteUrl } from "@/lib/site-url";
+import { SITE_DESCRIPTION, SITE_NAME } from "@/lib/site";
 
 const QUICK_LINKS = [
   { href: "/catalog?sea=200", label: "Первая линия" },
@@ -26,8 +30,25 @@ export default async function HomePage() {
   ]);
   const fav = new Set(favIds);
 
+  // Сведения об агентстве для поисковиков (schema.org). Пустые контакты не попадают.
+  const [settings, base, nonce] = await Promise.all([getSettings(), siteUrl(), headers().then((h) => h.get("x-nonce") ?? undefined)]);
+  const jsonLd = Object.fromEntries(
+    Object.entries({
+      "@context": "https://schema.org",
+      "@type": "RealEstateAgent",
+      name: SITE_NAME,
+      url: base,
+      description: SITE_DESCRIPTION,
+      areaServed: "Северный Кипр",
+      telephone: settings.phone,
+      email: settings.email,
+      address: settings.address,
+    }).filter(([, v]) => v),
+  );
+
   return (
     <>
+      <script type="application/ld+json" nonce={nonce} dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
       <section className="container-page pt-8 pb-8 sm:pt-12">
         <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-accent-dark via-accent to-sea px-6 py-12 text-white sm:px-12 sm:py-16">
           {/* Декоративные волны */}

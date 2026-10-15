@@ -7,7 +7,12 @@ import { PropertyCard } from "@/components/PropertyCard";
 import { Pagination } from "@/components/Pagination";
 import { ViewSwitch } from "@/components/ViewSwitch";
 
-export const metadata: Metadata = { title: "Каталог" };
+export const metadata: Metadata = {
+  title: "Каталог недвижимости",
+  description:
+    "Квартиры, пентхаусы, виллы и участки на Северном Кипре: фильтры по расстоянию до моря, региону, отделке, рассрочке. Объекты на карте.",
+  alternates: { canonical: "/catalog" },
+};
 
 function plural(n: number) {
   const m10 = n % 10, m100 = n % 100;

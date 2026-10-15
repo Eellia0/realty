@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { cache } from "react";
+import { headers } from "next/headers";
+import { notFound, permanentRedirect } from "next/navigation";
+import { parsePropertyParam, propertyPath } from "@/lib/slug";
+import { SITE_NAME, CURRENCY } from "@/lib/site";
+import { thumbUrl } from "@/lib/images";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { getFavoriteIds } from "@/lib/favorites";
@@ -9,7 +14,7 @@ import {
   labelOf,
 } from "@/lib/constants";
 import {
-  bedroomsLabel, formatArea, formatPrice, localFloor, pricePerMeter, seaDistanceLabel,
+  bedroomsLabel, formatArea, formatPrice, localFloor, pricePerMeter, propertyMeta, seaDistanceLabel,
 } from "@/lib/format";
 import { toMapPoint, withCover } from "@/lib/properties";
 import { Gallery } from "@/components/Gallery";
@@ -29,9 +34,10 @@ import { videoEmbed } from "@/lib/video";
 
 type Props = { params: Promise<{ id: string }> };
 
-async function loadProperty(idParam: string) {
-  const id = Number(idParam);
-  if (!Number.isInteger(id) || id <= 0) return null;
+// Объект читается один раз за запрос: и для метаданных, и для страницы.
+const loadProperty = cache(async (param: string) => {
+  const id = parsePropertyParam(param);
+  if (!id) return null;
   const property = await db.property.findUnique({
     where: { id },
     include: { images: { orderBy: { position: "asc" } } },
@@ -40,16 +46,42 @@ async function loadProperty(idParam: string) {
   // Черновики видит только администратор.
   if (property.status === "DRAFT" && (await getCurrentUser())?.role !== "ADMIN") return null;
   return property;
+});
+
+/** Короткое описание для поисковиков и превью ссылки: цена, планировка, место, море. */
+function summary(p: NonNullable<Awaited<ReturnType<typeof loadProperty>>>) {
+  return [
+    formatPrice(p.price, p.dealType),
+    `${labelOf(PROPERTY_TYPES, p.propertyType)}, ${propertyMeta(p)}`,
+    [p.district, labelOf(REGIONS, p.region)].filter(Boolean).join(", "),
+    seaDistanceLabel(p.seaDistance),
+  ]
+    .filter(Boolean)
+    .join(" · ");
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const p = await loadProperty((await params).id);
-  return p ? { title: p.title, description: p.description.slice(0, 160) } : {};
+  if (!p) return {};
+  const path = propertyPath(p);
+  const short = summary(p);
+  return {
+    title: p.title,
+    description: `${short}. ${p.description}`.slice(0, 200),
+    alternates: { canonical: path },
+    openGraph: { type: "website", url: path, siteName: SITE_NAME, locale: "ru_RU", title: p.title, description: short },
+    twitter: { card: "summary_large_image", title: p.title, description: short },
+    robots: p.status === "DRAFT" ? { index: false, follow: false } : undefined,
+  };
 }
 
 export default async function PropertyPage({ params }: Props) {
-  const p = await loadProperty((await params).id);
+  const param = (await params).id;
+  const p = await loadProperty(param);
   if (!p) notFound();
+  // Старые и устаревшие адреса (/property/12, прежнее название) ведут на актуальный.
+  const path = propertyPath(p);
+  if (`/property/${param}` !== path) permanentRedirect(path);
 
   const [favIds, similar] = await Promise.all([
     getFavoriteIds(),
@@ -97,11 +129,36 @@ export default async function PropertyPage({ params }: Props) {
   const monthly = hasInstallment
     ? installmentPlan(p.price, p.installmentDownPercent!, p.installmentMonths!, p.installmentRate)?.monthly
     : undefined;
-  const pageUrl = `${await siteUrl()}/property/${p.id}`;
+  const base = await siteUrl();
+  const pageUrl = `${base}${path}`;
   const waMessage = `Здравствуйте! Интересует объект «${p.title}», ${formatPrice(p.price, p.dealType)}. ${pageUrl}`;
+
+  // Структурированные данные для поисковиков (schema.org). «<» экранируется, чтобы текст не закрыл тег script.
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "RealEstateListing",
+    name: p.title,
+    description: summary(p),
+    url: pageUrl,
+    datePosted: p.createdAt.toISOString(),
+    image: photos.slice(0, 5).map((u) => `${base}${thumbUrl(u)}`),
+    offers: {
+      "@type": "Offer",
+      price: p.price,
+      priceCurrency: CURRENCY.code,
+      availability: p.status === "SOLD" ? "https://schema.org/SoldOut" : "https://schema.org/InStock",
+    },
+    contentLocation: {
+      "@type": "Place",
+      address: { "@type": "PostalAddress", streetAddress: p.address, addressLocality: p.district ?? undefined, addressRegion: labelOf(REGIONS, p.region) },
+      geo: { "@type": "GeoCoordinates", latitude: p.lat, longitude: p.lng },
+    },
+  };
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
 
   return (
     <div className="container-page py-8">
+      <script type="application/ld+json" nonce={nonce} dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
       <Link href="/catalog" className="text-sm font-medium text-muted hover:text-ink">← Назад в каталог</Link>
 
       <div className="mt-4 grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem]">

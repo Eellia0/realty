@@ -8,6 +8,7 @@ import {
 import { propertyMeta, seaDistanceLabel } from "./format";
 import type { MapPoint } from "./types";
 import { thumbUrl } from "./images";
+import { propertyPath } from "./slug";
 
 export const PAGE_SIZE = 12;
 
@@ -143,6 +144,7 @@ export function toMapPoint(p: PropertyWithCover): MapPoint {
     installment: p.installment,
     place: [p.district, labelOf(REGIONS, p.region)].filter(Boolean).join(", "),
     status: p.status,
+    href: propertyPath(p),
   };
 }
 

@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { ImagePlaceholder } from "@/components/icons";
 import { DeletePropertyButton } from "@/components/admin/DeletePropertyButton";
 import { thumbUrl } from "@/lib/images";
+import { propertyPath } from "@/lib/slug";
 
 /* eslint-disable @next/next/no-img-element */
 export default async function AdminPropertiesPage({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
@@ -68,7 +69,7 @@ export default async function AdminPropertiesPage({ searchParams }: { searchPara
               </div>
               <div className="flex shrink-0 gap-2">
                 {p.status !== "DRAFT" && (
-                  <Link href={`/property/${p.id}`} target="_blank" className="btn btn-secondary px-3 py-1.5">На сайте</Link>
+                  <Link href={propertyPath(p)} target="_blank" className="btn btn-secondary px-3 py-1.5">На сайте</Link>
                 )}
                 <Link href={`/admin/properties/${p.id}`} className="btn btn-secondary px-3 py-1.5">Изменить</Link>
                 <DeletePropertyButton id={p.id} title={p.title} />
