@@ -31,6 +31,7 @@ function safeNext(value: FormDataEntryValue | null, fallback = "/") {
 }
 
 export async function registerAction(_prev: AuthState, fd: FormData): Promise<AuthState> {
+  if (fd.get("consent") !== "on") return { error: "Подтвердите согласие на обработку персональных данных" };
   const limit = await consume(`register:ip:${await clientIp()}`, 5, 60 * 60 * 1000);
   if (!limit.ok) return { error: waitMessage(limit.retryAfterSec) };
 
@@ -48,7 +49,7 @@ export async function registerAction(_prev: AuthState, fd: FormData): Promise<Au
 
   // Роль всегда USER: администратор создаётся только командой npm run admin на сервере.
   const user = await db.user.create({
-    data: { email, name: name || null, role: "USER", passwordHash: await hashPassword(password) },
+    data: { email, name: name || null, role: "USER", passwordHash: await hashPassword(password), consentAt: new Date() },
   });
   await createSession(user.id, user.role);
   await mergeGuestFavorites(user.id);

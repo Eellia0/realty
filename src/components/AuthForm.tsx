@@ -2,6 +2,7 @@
 
 import { startTransition, useActionState, useRef } from "react";
 import { loginAction, registerAction } from "@/actions/auth";
+import { ConsentCheckbox } from "./ConsentCheckbox";
 
 type Mode = "login" | "register" | "admin";
 
@@ -49,6 +50,7 @@ export function AuthForm({ mode, next }: { mode: Mode; next?: string }) {
             placeholder={mode === "register" ? "Не короче 8 символов" : ""}
           />
         </div>
+        {mode === "register" && <ConsentCheckbox id="consent-register" />}
       </div>
 
       {needCode && (

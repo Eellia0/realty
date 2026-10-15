@@ -34,6 +34,8 @@ export default async function AdminLeadsPage() {
                   <td className="p-4">
                     {l.property ? (
                       <Link href={`/admin/properties/${l.property.id}`} className="font-medium hover:underline">{l.property.title}</Link>
+                    ) : l.source === "CONTACTS" ? (
+                      <span className="badge bg-sea-soft text-sea">Общая заявка: подбор</span>
                     ) : (
                       <span className="text-muted">Объект удалён</span>
                     )}

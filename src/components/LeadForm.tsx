@@ -2,8 +2,18 @@
 
 import { startTransition, useActionState } from "react";
 import { createLead } from "@/actions/leads";
+import { ConsentCheckbox } from "./ConsentCheckbox";
 
-export function LeadForm({ propertyId }: { propertyId: number }) {
+/** Заявка на просмотр. Без propertyId это общая заявка со страницы контактов. */
+export function LeadForm({
+  propertyId,
+  submitLabel = "Записаться на просмотр",
+  messagePlaceholder = "Удобное время для показа или вопрос",
+}: {
+  propertyId?: number;
+  submitLabel?: string;
+  messagePlaceholder?: string;
+}) {
   const [state, action, pending] = useActionState(createLead, undefined);
 
   if (state?.ok) {
@@ -24,13 +34,14 @@ export function LeadForm({ propertyId }: { propertyId: number }) {
         startTransition(() => action(fd));
       }}
     >
-      <input type="hidden" name="propertyId" value={propertyId} />
-      <input name="name" required placeholder="Ваше имя" className="input" autoComplete="name" />
-      <input name="phone" type="tel" required placeholder="+7 900 000-00-00" className="input" autoComplete="tel" />
-      <textarea name="message" rows={3} placeholder="Удобное время для показа или вопрос" className="input resize-none" />
+      {propertyId && <input type="hidden" name="propertyId" value={propertyId} />}
+      <input name="name" required maxLength={80} placeholder="Ваше имя" className="input" autoComplete="name" />
+      <input name="phone" type="tel" required maxLength={20} placeholder="+90 533 000 00 00" className="input" autoComplete="tel" />
+      <textarea name="message" rows={3} maxLength={1000} placeholder={messagePlaceholder} className="input resize-none" />
+      <ConsentCheckbox id={propertyId ? `consent-${propertyId}` : "consent-contacts"} />
       {state?.error && <p className="text-sm text-danger">{state.error}</p>}
       <button disabled={pending} className="btn btn-primary w-full">
-        {pending ? "Отправляем…" : "Записаться на просмотр"}
+        {pending ? "Отправляем…" : submitLabel}
       </button>
     </form>
   );

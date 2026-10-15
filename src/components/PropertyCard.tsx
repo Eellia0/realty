@@ -5,9 +5,10 @@ import type { PropertyWithCover } from "@/lib/properties";
 import { FavoriteButton } from "./FavoriteButton";
 import { ImagePlaceholder, PinIcon, WaveIcon } from "./icons";
 import { StatusBadge } from "./StatusBadge";
+import { thumbUrl } from "@/lib/images";
 
 export function PropertyCard({ p, isFavorite }: { p: PropertyWithCover; isFavorite: boolean }) {
-  const cover = p.images[0]?.url;
+  const cover = p.images[0] ? thumbUrl(p.images[0].url) : null;
   const sea = seaDistanceLabel(p.seaDistance);
   return (
     <article className="group card relative overflow-hidden transition hover:-translate-y-0.5 hover:shadow-lg">

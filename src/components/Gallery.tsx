@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ChevronIcon, ImagePlaceholder } from "./icons";
+import { thumbUrl } from "@/lib/images";
 
 /* eslint-disable @next/next/no-img-element */
 export function Gallery({ images, title }: { images: string[]; title: string }) {
@@ -42,7 +43,7 @@ export function Gallery({ images, title }: { images: string[]; title: string }) 
           {images.map((src, i) => (
             <button key={src} type="button" onClick={() => setIndex(i)}
               className={`h-16 w-24 shrink-0 overflow-hidden rounded-lg ring-2 transition ${i === index ? "ring-accent" : "ring-transparent opacity-70 hover:opacity-100"}`}>
-              <img src={src} alt="" className="h-full w-full object-cover" />
+              <img src={thumbUrl(src)} alt="" loading="lazy" className="h-full w-full object-cover" />
             </button>
           ))}
         </div>

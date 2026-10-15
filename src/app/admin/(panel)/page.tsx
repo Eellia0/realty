@@ -6,6 +6,7 @@ import { withCover } from "@/lib/properties";
 import { StatusBadge } from "@/components/StatusBadge";
 import { ImagePlaceholder } from "@/components/icons";
 import { DeletePropertyButton } from "@/components/admin/DeletePropertyButton";
+import { thumbUrl } from "@/lib/images";
 
 /* eslint-disable @next/next/no-img-element */
 export default async function AdminPropertiesPage({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
@@ -51,7 +52,7 @@ export default async function AdminPropertiesPage({ searchParams }: { searchPara
           {items.map((p) => (
             <div key={p.id} className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center">
               <div className="h-20 w-28 shrink-0 overflow-hidden rounded-xl">
-                {p.images[0] ? <img src={p.images[0].url} alt="" className="h-full w-full object-cover" /> : <ImagePlaceholder />}
+                {p.images[0] ? <img src={thumbUrl(p.images[0].url)} alt="" className="h-full w-full object-cover" /> : <ImagePlaceholder />}
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">

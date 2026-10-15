@@ -19,6 +19,8 @@ import { PropertyCard } from "@/components/PropertyCard";
 import { StatusBadge } from "@/components/StatusBadge";
 import { PinIcon, WaveIcon } from "@/components/icons";
 import { PropertiesMap } from "@/components/map";
+import { ContactButtons } from "@/components/ContactButtons";
+import { siteUrl } from "@/lib/site-url";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -82,6 +84,8 @@ export default async function PropertyPage({ params }: Props) {
     ["Цена за м²", p.propertyType !== "LAND" ? pricePerMeter(p.price, p.area) : null],
   ];
   const sea = seaDistanceLabel(p.seaDistance);
+  const pageUrl = `${await siteUrl()}/property/${p.id}`;
+  const waMessage = `Здравствуйте! Интересует объект «${p.title}», ${formatPrice(p.price, p.dealType)}. ${pageUrl}`;
 
   return (
     <div className="container-page py-8">
@@ -161,6 +165,7 @@ export default async function PropertyPage({ params }: Props) {
               {p.propertyType !== "LAND" && <div className="text-sm text-muted">{pricePerMeter(p.price, p.area)}</div>}
             </div>
             <FavoriteButton propertyId={p.id} initial={fav.has(p.id)} variant="full" />
+            <ContactButtons message={waMessage} compact />
           </div>
           {p.status !== "SOLD" && (
             <div className="card space-y-3 p-5">

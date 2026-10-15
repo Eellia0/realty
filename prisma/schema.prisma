@@ -22,9 +22,37 @@ model User {
   totpSecret   String?
   totpPending  String? // секрет, который ещё не подтверждён кодом
   totpLastStep Int? // последний принятый 30-секундный интервал, защита от повторного использования кода
+  consentAt    DateTime? // когда дал согласие на обработку персональных данных
   createdAt    DateTime   @default(now())
   sessions     Session[]
   favorites    Favorite[]
+  resets       PasswordReset[]
+}
+
+/// Одноразовые ссылки для восстановления пароля. Хранится только хэш токена.
+model PasswordReset {
+  id        String    @id // sha256 от токена из письма
+  userId    Int
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+/// Настройки сайта, которые меняются из админки. Всегда одна строка с id = 1.
+model SiteSettings {
+  id           Int      @id @default(1)
+  phone        String? // телефон для звонков, как показывать на сайте
+  whatsapp     String? // номер WhatsApp, только цифры с кодом страны
+  telegram     String? // имя в Telegram без @
+  email        String? // почта для клиентов
+  address      String? // адрес офиса
+  workingHours String? // часы работы
+  legalName    String? // кто обрабатывает данные: имя ИП или название компании (для политики)
+  notifyEmail  String? // куда присылать заявки на почту
+  updatedAt    DateTime @updatedAt
 }
 
 model Session {
@@ -42,6 +70,8 @@ model RateLimit {
   key     String   @id
   count   Int
   resetAt DateTime
+
+  @@index([resetAt])
 }
 
 model Property {
@@ -111,6 +141,8 @@ model Lead {
   phone      String
   message    String?
   status     String    @default("NEW") // NEW | IN_PROGRESS | DONE
+  source     String    @default("PROPERTY") // PROPERTY — со страницы объекта, CONTACTS — общая заявка
+  consentAt  DateTime? // когда клиент дал согласие на обработку данных
   createdAt  DateTime  @default(now())
   property   Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
 

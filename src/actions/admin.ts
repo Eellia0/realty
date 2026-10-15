@@ -12,7 +12,7 @@ import {
 } from "@/lib/constants";
 import { consume, waitMessage } from "@/lib/rate-limit";
 import { verifyTotp } from "@/lib/totp";
-import { UPLOAD_URL_RE } from "@/lib/uploads";
+import { UPLOAD_URL_RE, deleteUploadFiles } from "@/lib/uploads";
 
 // ---------- Объекты ----------
 
@@ -111,11 +111,14 @@ export async function saveProperty(_prev: SaveState, fd: FormData): Promise<Save
   const imageRows = images.map((url, position) => ({ url, position }));
 
   if (id) {
+    const before = await db.propertyImage.findMany({ where: { propertyId: id }, select: { url: true } });
     await db.$transaction([
       db.property.update({ where: { id }, data: fields }),
       db.propertyImage.deleteMany({ where: { propertyId: id } }),
       db.propertyImage.createMany({ data: imageRows.map((r) => ({ ...r, propertyId: id })) }),
     ]);
+    // Фото, которые убрали из объекта, удаляем с диска.
+    await deleteUploadFiles(before.map((i) => i.url).filter((u) => !images.includes(u)));
   } else {
     await db.property.create({ data: { ...fields, images: { create: imageRows } } });
   }
@@ -127,7 +130,11 @@ export async function saveProperty(_prev: SaveState, fd: FormData): Promise<Save
 export async function deleteProperty(fd: FormData) {
   await requireAdmin();
   const id = Number(fd.get("id"));
-  if (Number.isInteger(id) && id > 0) await db.property.deleteMany({ where: { id } });
+  if (Number.isInteger(id) && id > 0) {
+    const images = await db.propertyImage.findMany({ where: { propertyId: id }, select: { url: true } });
+    await db.property.deleteMany({ where: { id } });
+    await deleteUploadFiles(images.map((i) => i.url));
+  }
   revalidatePath("/", "layout");
 }
 

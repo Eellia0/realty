@@ -7,6 +7,7 @@ import {
 } from "./constants";
 import { propertyMeta, seaDistanceLabel } from "./format";
 import type { MapPoint } from "./types";
+import { thumbUrl } from "./images";
 
 export const PAGE_SIZE = 12;
 
@@ -130,7 +131,7 @@ export function toMapPoint(p: PropertyWithCover): MapPoint {
     dealType: p.dealType,
     title: p.title,
     address: p.address,
-    cover: p.images[0]?.url ?? null,
+    cover: p.images[0] ? thumbUrl(p.images[0].url) : null,
     typeLabel: labelOf(PROPERTY_TYPES, p.propertyType),
     meta: propertyMeta(p),
     sea: seaDistanceLabel(p.seaDistance),

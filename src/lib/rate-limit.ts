@@ -19,6 +19,8 @@ export async function checkLimit(key: string, limit: number): Promise<RateLimitR
 /** Увеличивает счётчик. Окно отсчитывается от первой попытки. */
 export async function hit(key: string, windowMs: number) {
   const now = new Date();
+  // Удаляем истёкшие записи: в ключах есть IP-адреса, долго хранить их незачем.
+  await db.rateLimit.deleteMany({ where: { resetAt: { lt: now } } });
   const row = await db.rateLimit.findUnique({ where: { key } });
   if (!row || row.resetAt < now) {
     await db.rateLimit.upsert({

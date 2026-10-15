@@ -23,6 +23,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           Заявки
           {newLeads > 0 && <span className="rounded-full bg-accent px-1.5 text-xs text-white">{newLeads}</span>}
         </Link>
+        <Link href="/admin/settings" className="btn btn-secondary">Настройки</Link>
         <Link href="/admin/security" className="btn btn-secondary">
           <ShieldIcon className="h-4 w-4" />
           Безопасность
