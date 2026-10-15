@@ -32,5 +32,12 @@ export async function deleteUploadFiles(urls: string[]) {
       return [name, name.replace(/\.webp$/, "-thumb.webp")];
     })
     .filter((n, i, arr) => UPLOAD_NAME_RE.test(n) && arr.indexOf(n) === i);
-  await Promise.all(names.map((n) => unlink(path.join(/*turbopackIgnore: true*/ UPLOAD_DIR, n)).catch(() => {})));
+  await Promise.all(
+    names.map((n) =>
+      unlink(path.join(/*turbopackIgnore: true*/ UPLOAD_DIR, n)).catch((e: NodeJS.ErrnoException) => {
+        // Файла уже нет — это нормально. Остальные ошибки пишем в журнал, чтобы мусор на диске не копился молча.
+        if (e.code !== "ENOENT") console.warn(`[фото] Не удалось удалить ${n}: ${e.code ?? e.message}`);
+      }),
+    ),
+  );
 }
