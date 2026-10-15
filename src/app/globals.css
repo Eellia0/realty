@@ -1,0 +1,296 @@
+@import "tailwindcss";
+
+/*
+ * Средиземноморская палитра: тёплый песочный фон, глубокий бирюзовый акцент,
+ * морской синий и янтарный для деталей. Насыщенно, но спокойно.
+ */
+@theme {
+  --font-sans: var(--font-manrope), system-ui, sans-serif;
+
+  --color-bg: #f6f2ea;
+  --color-surface: #ffffff;
+  --color-warm: #efe6d6;
+  --color-ink: #1c2b31;
+  --color-muted: #5f6f76;
+  --color-line: #e3dacb;
+  --color-accent: #0e7c7b;
+  --color-accent-dark: #0a5c5c;
+  --color-accent-soft: #d9f0ec;
+  --color-sea: #1767a0;
+  --color-sea-soft: #e0eef8;
+  --color-sun: #e3a03a;
+  --color-sun-soft: #fbf0db;
+  --color-terracotta: #c4623a;
+  --color-sand: #d2ae79;
+  --color-danger: #c2463d;
+  --color-danger-soft: #fbe9e6;
+
+  --shadow-soft: 0 1px 2px rgb(28 43 49 / 0.05), 0 8px 24px rgb(28 43 49 / 0.07);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+}
+
+@layer components {
+  .container-page {
+    @apply mx-auto w-full max-w-7xl px-4 sm:px-6;
+  }
+  .card {
+    @apply rounded-2xl bg-surface shadow-soft ring-1 ring-line;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60;
+  }
+  .btn-primary {
+    @apply bg-accent text-white shadow-sm hover:bg-accent-dark;
+  }
+  .btn-secondary {
+    @apply bg-surface text-ink ring-1 ring-line hover:bg-warm;
+  }
+  .btn-danger {
+    @apply bg-surface text-danger ring-1 ring-line hover:bg-danger-soft;
+  }
+  .input {
+    @apply w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-sm text-ink transition outline-none placeholder:text-muted/60 focus:border-accent focus:ring-4 focus:ring-accent/15;
+  }
+  .label {
+    @apply mb-1.5 block text-sm font-medium text-ink;
+  }
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium;
+  }
+  .check {
+    @apply flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-sm ring-1 ring-line transition hover:bg-warm has-[:checked]:bg-accent-soft has-[:checked]:text-accent-dark has-[:checked]:ring-accent/40;
+  }
+}
+
+/* Балун Яндекс Карт в стиле сайта */
+[class*="ymaps-2"][class*="-balloon__content"] {
+  font-family: var(--font-sans) !important;
+}
+
+/* ---------- Яндекс Карты: метки, кластеры и карточка в стиле сайта ---------- */
+
+/* Метка-цена: бирюзовая пилюля с хвостиком, кончик хвостика указывает на точку */
+.ym-price {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, calc(-100% - 8px));
+  transform-origin: 50% calc(100% + 8px);
+  white-space: nowrap;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--color-accent);
+  color: #fff;
+  font: 700 13px/1.2 var(--font-sans);
+  letter-spacing: 0.01em;
+  border: 2px solid #fff;
+  box-shadow: 0 6px 16px rgb(10 92 92 / 0.32);
+  cursor: pointer;
+  transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+.ym-price::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -7px;
+  width: 10px;
+  height: 10px;
+  background: inherit;
+  border-right: 2px solid #fff;
+  border-bottom: 2px solid #fff;
+  border-bottom-right-radius: 3px;
+  transform: translateX(-50%) rotate(45deg);
+}
+.ym-price:hover {
+  background: var(--color-accent-dark);
+  transform: translate(-50%, calc(-100% - 8px)) scale(1.08);
+  box-shadow: 0 8px 22px rgb(10 92 92 / 0.42);
+}
+/* Выделенная метка: при наведении на карточку в списке */
+.ym-price--active,
+.ym-price--active:hover {
+  background: var(--color-sun);
+  color: var(--color-ink);
+  transform: translate(-50%, calc(-100% - 8px)) scale(1.12);
+  box-shadow: 0 8px 24px rgb(227 160 58 / 0.55);
+}
+
+/* Кластер: круг с числом и мягким ореолом */
+.ym-cluster {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%);
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-sea) 100%);
+  color: #fff;
+  font: 800 15px/1 var(--font-sans);
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 6px rgb(14 124 123 / 0.18), 0 6px 18px rgb(23 103 160 / 0.35);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+.ym-cluster:hover {
+  transform: translate(-50%, -50%) scale(1.08);
+}
+
+/* Булавка выбора точки в админке */
+.ym-pin {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 34px;
+  height: 34px;
+  transform: translate(-50%, -100%) rotate(-45deg);
+  transform-origin: center;
+  margin-top: -6px;
+  border-radius: 50% 50% 50% 0;
+  background: linear-gradient(135deg, var(--color-accent), var(--color-sea));
+  border: 3px solid #fff;
+  box-shadow: 0 6px 16px rgb(10 92 92 / 0.4);
+  cursor: grab;
+}
+.ym-pin span {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #fff;
+}
+
+/* Всплывающая карточка объекта */
+.ym-balloon {
+  position: absolute;
+  width: 264px;
+  background: var(--color-surface);
+  border-radius: 18px;
+  box-shadow: 0 16px 40px rgb(28 43 49 / 0.22), 0 2px 6px rgb(28 43 49 / 0.08);
+  font-family: var(--font-sans);
+  color: var(--color-ink);
+  animation: ym-pop 0.16s ease-out;
+}
+@keyframes ym-pop {
+  from { opacity: 0; transform: translateY(6px) scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
+.ym-balloon__arrow {
+  position: absolute;
+  left: 50%;
+  bottom: -7px;
+  width: 16px;
+  height: 16px;
+  background: var(--color-surface);
+  transform: translateX(-50%) rotate(45deg);
+  border-bottom-right-radius: 4px;
+}
+.ym-balloon__close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 0;
+  background: rgb(255 255 255 / 0.2);
+  color: #fff;
+  font: 400 20px/1 var(--font-sans);
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+.ym-balloon__close:hover {
+  background: rgb(255 255 255 / 0.35);
+}
+.ym-card__head {
+  padding: 14px 44px 14px 16px;
+  border-radius: 18px 18px 0 0;
+  background: linear-gradient(120deg, var(--color-accent-dark) 0%, var(--color-accent) 55%, var(--color-sea) 100%);
+  color: #fff;
+}
+.ym-card__type {
+  font: 700 12px/1.3 var(--font-sans);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.9;
+}
+.ym-card__place {
+  margin-top: 2px;
+  font: 500 13px/1.35 var(--font-sans);
+}
+.ym-card__body {
+  padding: 14px 16px 16px;
+}
+.ym-card__price {
+  font: 800 22px/1.15 var(--font-sans);
+  color: var(--color-accent-dark);
+}
+.ym-card__title {
+  margin-top: 6px;
+  font: 600 14px/1.35 var(--font-sans);
+}
+.ym-card__meta {
+  margin-top: 4px;
+  font: 400 12.5px/1.4 var(--font-sans);
+  color: var(--color-muted);
+}
+.ym-card__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.ym-chip {
+  padding: 3px 8px;
+  border-radius: 8px;
+  font: 600 11.5px/1.3 var(--font-sans);
+}
+.ym-chip--sea {
+  background: var(--color-sea-soft);
+  color: var(--color-sea);
+}
+.ym-chip--sun {
+  background: var(--color-sun-soft);
+  color: #9a6413;
+}
+.ym-card__btn {
+  display: block;
+  margin-top: 14px;
+  padding: 9px 12px;
+  border-radius: 12px;
+  background: var(--color-accent);
+  color: #fff !important;
+  text-align: center;
+  font: 700 13px/1.2 var(--font-sans);
+  text-decoration: none !important;
+  transition: background-color 0.15s;
+}
+.ym-card__btn:hover {
+  background: var(--color-accent-dark);
+}
+
+/* Кластер, в котором лежит выделенный в списке объект */
+.ym-cluster--active,
+.ym-cluster--active:hover {
+  background: var(--color-sun);
+  color: var(--color-ink);
+  transform: translate(-50%, -50%) scale(1.12);
+  box-shadow: 0 0 0 7px rgb(227 160 58 / 0.3), 0 8px 22px rgb(227 160 58 / 0.5);
+}

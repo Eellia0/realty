@@ -1,0 +1,118 @@
+// PostgreSQL. Строка подключения в .env (DATABASE_URL).
+// Строковые поля вместо enum: новые значения (например, аренда) добавляются без миграции типов.
+// Допустимые значения и подписи описаны в src/lib/constants.ts.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int        @id @default(autoincrement())
+  email        String     @unique
+  passwordHash String
+  name         String?
+  role         String     @default("USER") // USER | ADMIN
+  // Двухфакторная аутентификация (TOTP). Секреты хранятся зашифрованными ключом APP_SECRET.
+  totpEnabled  Boolean    @default(false)
+  totpSecret   String?
+  totpPending  String? // секрет, который ещё не подтверждён кодом
+  totpLastStep Int? // последний принятый 30-секундный интервал, защита от повторного использования кода
+  createdAt    DateTime   @default(now())
+  sessions     Session[]
+  favorites    Favorite[]
+}
+
+model Session {
+  id        String   @id // sha256 от токена из cookie
+  userId    Int
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+/// Счётчики для ограничения частоты запросов (вход, регистрация, заявки).
+model RateLimit {
+  key     String   @id
+  count   Int
+  resetAt DateTime
+}
+
+model Property {
+  id             Int             @id @default(autoincrement())
+  title          String
+  description    String          @default("")
+  dealType       String          @default("SALE") // SALE | RENT (аренда пока выключена)
+  propertyType   String // APARTMENT | PENTHOUSE | VILLA | ... см. constants.ts
+  status         String          @default("DRAFT") // DRAFT | PUBLISHED | RESERVED | SOLD
+  price          Float // в валюте сайта (см. src/lib/site.ts)
+  area           Float // жилая (закрытая) площадь, м²
+  plotArea       Float? // площадь участка, м²
+  bedrooms       Int? // спальни: 2 означает формат «2+1», 0 — студия
+  bathrooms      Int?
+  floor          Int? // по местной нумерации: первый этаж = 0
+  floorsTotal    Int?
+  yearBuilt      Int?
+  completion     String          @default("READY") // READY | UNDER_CONSTRUCTION | OFF_PLAN
+  completionDate String? // срок сдачи для строящихся, например «IV кв. 2027»
+  finishing      String? // отделка и ремонт
+  furnishing     String? // мебель
+  titleDeed      String? // тип титула (документа на собственность)
+  seaDistance    Int? // расстояние до моря, м
+  seaView        Boolean         @default(false)
+  features       String[]        @default([]) // бассейн, сад, парковка и т.д.
+  region         String // GIRNE | ISKELE | ...
+  district       String? // посёлок или район
+  address        String
+  lat            Float
+  lng            Float
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  images         PropertyImage[]
+  favorites      Favorite[]
+  leads          Lead[]
+
+  @@index([status, dealType])
+  @@index([price])
+  @@index([seaDistance])
+  @@index([region])
+}
+
+model PropertyImage {
+  id         Int      @id @default(autoincrement())
+  propertyId Int
+  url        String
+  position   Int      @default(0)
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId, position])
+}
+
+model Favorite {
+  userId     Int
+  propertyId Int
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@id([userId, propertyId])
+}
+
+model Lead {
+  id         Int       @id @default(autoincrement())
+  propertyId Int?
+  name       String
+  phone      String
+  message    String?
+  status     String    @default("NEW") // NEW | IN_PROGRESS | DONE
+  createdAt  DateTime  @default(now())
+  property   Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+}
