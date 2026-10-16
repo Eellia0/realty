@@ -1,0 +1,25 @@
+# Служба сайта. Устанавливается скриптом deploy/setup.sh в /etc/systemd/system/.
+[Unit]
+Description=Realty site (Next.js)
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+User=realty
+Group=realty
+WorkingDirectory=/opt/realty
+Environment=NODE_ENV=production
+# Сайт слушает только локальный адрес, снаружи к нему ходят через Caddy.
+ExecStart=/usr/bin/node /opt/realty/node_modules/next/dist/bin/next start -H 127.0.0.1 -p 3000
+Restart=always
+RestartSec=5
+
+# Ограничения: служба не может менять систему, писать можно только в фото и кэш сборки.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/realty/uploads /opt/realty/.next
+
+[Install]
+WantedBy=multi-user.target
