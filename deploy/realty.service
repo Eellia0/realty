@@ -9,6 +9,7 @@ User=realty
 Group=realty
 WorkingDirectory=/opt/realty
 Environment=NODE_ENV=production
+Environment=NEXT_TELEMETRY_DISABLED=1
 # Сайт слушает только локальный адрес, снаружи к нему ходят через Caddy.
 ExecStart=/usr/bin/node /opt/realty/node_modules/next/dist/bin/next start -H 127.0.0.1 -p 3000
 Restart=always
