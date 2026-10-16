@@ -106,6 +106,8 @@ systemctl reload caddy || systemctl restart caddy
 
 step "SSH: порты 22 и 8443 (443 освобождается для сайта)"
 printf 'Port 22\nPort 8443\n' > /etc/ssh/sshd_config.d/10-ports.conf
+# При запуске SSH через сокет systemd этой папки может не быть, а без неё проверка настроек падает.
+mkdir -p /run/sshd
 sshd -t
 systemctl daemon-reload
 systemctl restart ssh.socket 2>/dev/null || systemctl restart ssh
